@@ -1,6 +1,7 @@
 import AppKit
 import NowPlayingCore
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private let menuBuilder = MenuBarController()
@@ -9,6 +10,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var client: SpotifyClient!
     private var timer: Timer?
     private var state: DisplayState = .loggedOut
+    private var isTicking = false
+    private var isAuthenticating = false
 
     override init() {
         guard let clientID = ProcessInfo.processInfo.environment["SPOTIFY_CLIENT_ID"],
@@ -27,23 +30,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         applyState(.loggedOut)
 
-        Task { await tick() }
+        Task {
+            if await auth.isLoggedIn {
+                startPolling()
+                await tick()
+            }
+        }
+    }
+
+    // MARK: - Polling
+
+    private func startPolling() {
+        guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { await self?.tick() }
         }
     }
 
+    private func stopPolling() {
+        timer?.invalidate()
+        timer = nil
+    }
+
     private func tick() async {
+        guard !isTicking else { return }
+        isTicking = true
+        defer { isTicking = false }
+
         guard await auth.isLoggedIn else { applyState(.loggedOut); return }
         do {
-            if let np = try await client.currentlyPlaying() {
-                applyState(.playing(np))
-            } else {
-                applyState(.idle)
-            }
+            try await updateNowPlaying()
         } catch SpotifyClientError.unauthorized {
             do {
                 _ = try await auth.refresh()
+                try await updateNowPlaying()
             } catch {
                 applyState(.loggedOut)
             }
@@ -52,24 +72,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func applyState(_ newState: DisplayState) {
-        Task { @MainActor in
-            self.state = newState
-            let loggedIn = await auth.isLoggedIn
-            self.statusItem.button?.title = TitleFormatter.title(for: newState)
-            self.statusItem.menu = self.menuBuilder.buildMenu(
-                isLoggedIn: loggedIn,
-                nowPlayingTitle: TitleFormatter.title(for: newState),
-                target: self,
-                authAction: #selector(self.toggleAuth),
-                quitAction: #selector(self.quit))
+    private func updateNowPlaying() async throws {
+        if let np = try await client.currentlyPlaying() {
+            applyState(.playing(np))
+        } else {
+            applyState(.idle)
         }
     }
+
+    // MARK: - Display
+
+    private func applyState(_ newState: DisplayState) {
+        state = newState
+        let loggedIn = newState != .loggedOut
+        let title = TitleFormatter.title(for: newState)
+        statusItem.button?.title = title
+        statusItem.menu = menuBuilder.buildMenu(
+            isLoggedIn: loggedIn,
+            nowPlayingTitle: title,
+            target: self,
+            authAction: #selector(toggleAuth),
+            quitAction: #selector(quit))
+    }
+
+    // MARK: - Auth
 
     @objc private func toggleAuth() {
         Task {
             if await auth.isLoggedIn {
                 await auth.logout()
+                stopPolling()
                 applyState(.loggedOut)
             } else {
                 await login()
@@ -78,14 +110,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func login() async {
+        guard !isAuthenticating else { return }
+        isAuthenticating = true
+        defer { isAuthenticating = false }
+
         let pkce = PKCE()
         let stateParam = PKCE.makeVerifier(length: 16)
         let url = await auth.authorizeURL(pkce: pkce, state: stateParam)
         let server = LoopbackServer(port: config.port)
         NSWorkspace.shared.open(url)
         do {
-            let code = try await server.waitForCode()
-            try await auth.exchange(code: code, verifier: pkce.verifier)
+            let callback = try await server.waitForCode()
+            guard callback.state == stateParam else {
+                applyState(.loggedOut)
+                return
+            }
+            try await auth.exchange(code: callback.code, verifier: pkce.verifier)
+            startPolling()
             await tick()
         } catch {
             server.stop()
@@ -94,6 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func quit() {
+        stopPolling()
         NSApplication.shared.terminate(nil)
     }
 }
