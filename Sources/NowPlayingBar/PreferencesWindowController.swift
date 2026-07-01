@@ -132,7 +132,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         }
 
         formatField.stringValue = preferences.trackTemplate
-        formatField.placeholderString = "<artist> — <title>"
+        formatField.placeholderString = Preferences.defaultTrackTemplate
         formatField.delegate = self
         formatField.translatesAutoresizingMaskIntoConstraints = false
         formatField.widthAnchor.constraint(equalToConstant: 260).isActive = true
@@ -171,8 +171,14 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scrollRow.orientation = .horizontal
         scrollRow.spacing = 20
 
+        let variablesHint = NSTextField(
+            labelWithString: "Variables: <title> <artist> <artists> <album> <year>")
+        variablesHint.font = .systemFont(ofSize: 10)
+        variablesHint.textColor = .secondaryLabelColor
+
         return tabContainer([
             labeledRow("Format:", formatField),
+            variablesHint,
             formatErrorLabel,
             labeledRow("Text alignment:", alignmentPopup),
             divider(),

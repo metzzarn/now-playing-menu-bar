@@ -103,7 +103,7 @@ public struct Preferences {
         set { defaults.set(newValue.rawValue, forKey: Key.textAlignment) }
     }
 
-    public static let defaultTrackTemplate = "<artist> — <title>"
+    public static let defaultTrackTemplate = "<artists> - <title> <(year)>"
 
     public var trackTemplate: String {
         get {
