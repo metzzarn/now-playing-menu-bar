@@ -35,7 +35,7 @@ public struct Preferences {
     public var refreshInterval: TimeInterval {
         get {
             let stored = defaults.double(forKey: Key.refreshInterval)
-            return stored == 0 ? 5 : stored
+            return stored == 0 ? 3 : stored
         }
         set { defaults.set(newValue, forKey: Key.refreshInterval) }
     }
@@ -68,12 +68,12 @@ public struct Preferences {
     }
 
     public var scrollSpeed: Double {
-        get { (defaults.object(forKey: Key.scrollSpeed) as? Double) ?? 40 }
+        get { (defaults.object(forKey: Key.scrollSpeed) as? Double) ?? 20 }
         set { defaults.set(newValue, forKey: Key.scrollSpeed) }
     }
 
     public var scrollMaxWidth: Double {
-        get { (defaults.object(forKey: Key.scrollMaxWidth) as? Double) ?? 180 }
+        get { (defaults.object(forKey: Key.scrollMaxWidth) as? Double) ?? 150 }
         set { defaults.set(newValue, forKey: Key.scrollMaxWidth) }
     }
 

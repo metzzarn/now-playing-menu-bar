@@ -6,7 +6,7 @@ final class PreferencesWindowController: NSWindowController {
     private let onSave: (Preferences) -> Void
     private let clientIDField = NSTextField()
     private let intervalPopup = NSPopUpButton()
-    private static let intervals: [TimeInterval] = [3, 5, 10]
+    private static let intervals: [TimeInterval] = [1, 3, 5, 10]
 
     private let progressEnabledButton = NSButton(
         checkboxWithTitle: "Show progress bar", target: nil, action: nil)
@@ -67,6 +67,8 @@ final class PreferencesWindowController: NSWindowController {
         thicknessStepper.target = self
         thicknessStepper.action = #selector(thicknessChanged)
         thicknessLabel.stringValue = "\(Int(preferences.progressBarThickness)) pt"
+        thicknessLabel.translatesAutoresizingMaskIntoConstraints = false
+        thicknessLabel.widthAnchor.constraint(equalToConstant: 34).isActive = true
 
         colorWell.color = NSColor.fromHex(preferences.progressBarColorHex) ?? .systemGreen
         colorWell.translatesAutoresizingMaskIntoConstraints = false
@@ -99,6 +101,11 @@ final class PreferencesWindowController: NSWindowController {
         scrollRow.orientation = .horizontal
         scrollRow.spacing = 20
 
+        // Save pinned right within a full-width row; the spacer expands.
+        saveButton.setContentHuggingPriority(.required, for: .horizontal)
+        let saveRow = NSStackView(views: [NSView(), saveButton])
+        saveRow.orientation = .horizontal
+
         let stack = NSStackView(views: [
             labeledRow("Client ID:", clientIDField),
             labeledRow("Refresh:", intervalPopup),
@@ -108,10 +115,12 @@ final class PreferencesWindowController: NSWindowController {
             scrollEnabledButton,
             scrollRow,
             labeledRow("Max width (pt):", maxWidthField),
-            saveButton,
+            saveRow,
         ])
+        // Left-aligned so a row changing width (e.g. the thickness label) never
+        // shifts the other rows.
         stack.orientation = .vertical
-        stack.alignment = .trailing
+        stack.alignment = .leading
         stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(stack)
@@ -120,6 +129,7 @@ final class PreferencesWindowController: NSWindowController {
             stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 20),
             stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
             stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
+            saveRow.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
         ])
     }
 
