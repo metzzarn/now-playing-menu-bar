@@ -227,7 +227,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
             text = "Login"
             progress = nil
         } else if let playback {
-            text = "\(playback.artist) — \(playback.track)"
+            text = TrackTemplate.render(preferences.trackTemplate, values: [
+                .title: playback.track,
+                .artist: playback.artist,
+                .artists: playback.artists.joined(separator: ", "),
+                .album: playback.album,
+                .year: playback.year ?? "",
+            ])
             progress = playback.durationMs > 0
                 ? Double(localProgressMs) / Double(playback.durationMs) : nil
         } else {
@@ -363,9 +369,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     }
 
     private func withPlaying(_ state: PlaybackState, _ isPlaying: Bool) -> PlaybackState {
-        PlaybackState(track: state.track, artist: state.artist, album: state.album,
-                      artworkURL: state.artworkURL, isPlaying: isPlaying,
-                      progressMs: localProgressMs, durationMs: state.durationMs)
+        PlaybackState(track: state.track, artist: state.artist, artists: state.artists,
+                      album: state.album, year: state.year, artworkURL: state.artworkURL,
+                      isPlaying: isPlaying, progressMs: localProgressMs,
+                      durationMs: state.durationMs)
     }
 
     @objc private func quit() {

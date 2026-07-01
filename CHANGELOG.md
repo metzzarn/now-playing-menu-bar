@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] - 2026-07-01
+
+### Added
+- Custom menu-bar title format: a validated template using <title>, <artist>,
+  <artists> (all artists), <album>, and <year>. Optional decoration characters
+  inside a token (e.g. <(year)>) render only when the value is present. Invalid
+  formats show an error and block Save.
+
+### Changed
+- Playback now captures all artists and the album release year.
+
 ## [0.4.0] - 2026-07-01
 
 ### Added

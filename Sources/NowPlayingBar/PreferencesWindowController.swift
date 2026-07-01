@@ -1,11 +1,14 @@
 import AppKit
 import NowPlayingCore
 
-final class PreferencesWindowController: NSWindowController {
+final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate {
     private var preferences: Preferences
     private let onSave: (Preferences) -> Void
     private let clientIDField = NSTextField()
     private let intervalPopup = NSPopUpButton()
+    private let formatField = NSTextField()
+    private let formatErrorLabel = NSTextField(labelWithString: "")
+    private let saveButton = NSButton(title: "Save", target: nil, action: nil)
     private static let intervals: [TimeInterval] = [1, 3, 5, 10]
 
     private let progressEnabledButton = NSButton(
@@ -27,11 +30,11 @@ final class PreferencesWindowController: NSWindowController {
         self.preferences = preferences
         self.onSave = onSave
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 460),
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 510),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered, defer: false)
         window.title = "Preferences"
-        window.contentMinSize = NSSize(width: 460, height: 440)
+        window.contentMinSize = NSSize(width: 460, height: 490)
         super.init(window: window)
         buildUI()
     }
@@ -54,7 +57,9 @@ final class PreferencesWindowController: NSWindowController {
         tabView.addTabViewItem(tab("Menu Bar", view: menuBarTab()))
         tabView.selectTabViewItem(at: 1)  // default to Menu Bar
 
-        let saveButton = NSButton(title: "Save", target: self, action: #selector(save))
+        saveButton.title = "Save"
+        saveButton.target = self
+        saveButton.action = #selector(save)
         saveButton.keyEquivalent = "\r"
         saveButton.setContentHuggingPriority(.required, for: .horizontal)
         let saveRow = NSStackView(views: [NSView(), saveButton])
@@ -126,7 +131,16 @@ final class PreferencesWindowController: NSWindowController {
             alignmentPopup.selectItem(at: index)
         }
 
+        formatField.stringValue = preferences.trackTemplate
+        formatField.placeholderString = "<artist> — <title>"
+        formatField.delegate = self
+        formatField.translatesAutoresizingMaskIntoConstraints = false
+        formatField.widthAnchor.constraint(equalToConstant: 260).isActive = true
+        formatErrorLabel.textColor = .systemRed
+        formatErrorLabel.font = .systemFont(ofSize: 10)
+
         updateWidthFieldStates()
+        updateFormatValidation()
     }
 
     // MARK: - Tabs
@@ -158,6 +172,8 @@ final class PreferencesWindowController: NSWindowController {
         scrollRow.spacing = 20
 
         return tabContainer([
+            labeledRow("Format:", formatField),
+            formatErrorLabel,
             labeledRow("Text alignment:", alignmentPopup),
             divider(),
             progressEnabledButton,
@@ -232,6 +248,16 @@ final class PreferencesWindowController: NSWindowController {
         updateWidthFieldStates()
     }
 
+    func controlTextDidChange(_ obj: Notification) {
+        if (obj.object as? NSTextField) === formatField { updateFormatValidation() }
+    }
+
+    private func updateFormatValidation() {
+        let error = TrackTemplate.validate(formatField.stringValue)
+        formatErrorLabel.stringValue = error ?? ""
+        saveButton.isEnabled = error == nil
+    }
+
     private func updateWidthFieldStates() {
         let staticOn = useStaticWidthButton.state == .on
         staticWidthField.isEnabled = staticOn
@@ -252,6 +278,7 @@ final class PreferencesWindowController: NSWindowController {
         preferences.scrollMaxWidth = Double(maxWidthField.stringValue) ?? preferences.scrollMaxWidth
         preferences.scrollPauseAtEnds = Double(pauseField.stringValue) ?? preferences.scrollPauseAtEnds
         preferences.textAlignment = MenuBarTextAlignment.allCases[alignmentPopup.indexOfSelectedItem]
+        preferences.trackTemplate = formatField.stringValue
         onSave(preferences)
     }
 }

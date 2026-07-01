@@ -17,6 +17,7 @@ public struct Preferences {
         static let scrollMaxWidth = "scrollMaxWidth"
         static let scrollPauseAtEnds = "scrollPauseAtEnds"
         static let textAlignment = "textAlignment"
+        static let trackTemplate = "trackTemplate"
     }
 
     private static let defaultColorHex = "#1DB954FF"
@@ -100,6 +101,16 @@ public struct Preferences {
             (defaults.string(forKey: Key.textAlignment)).flatMap(MenuBarTextAlignment.init) ?? .left
         }
         set { defaults.set(newValue.rawValue, forKey: Key.textAlignment) }
+    }
+
+    public static let defaultTrackTemplate = "<artist> — <title>"
+
+    public var trackTemplate: String {
+        get {
+            let value = defaults.string(forKey: Key.trackTemplate)
+            return (value?.isEmpty == false) ? value! : Self.defaultTrackTemplate
+        }
+        set { defaults.set(newValue, forKey: Key.trackTemplate) }
     }
 
     public var menuBarStyle: MenuBarStyle {

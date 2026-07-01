@@ -72,7 +72,15 @@ public struct SpotifyClient {
 
     static func parseState(_ data: Data) throws -> PlaybackState? {
         struct Image: Decodable { let url: String }
-        struct Album: Decodable { let name: String; let images: [Image] }
+        struct Album: Decodable {
+            let name: String
+            let images: [Image]
+            let releaseDate: String?
+            enum CodingKeys: String, CodingKey {
+                case name, images
+                case releaseDate = "release_date"
+            }
+        }
         struct Artist: Decodable { let name: String }
         struct Item: Decodable {
             let name: String
@@ -96,10 +104,14 @@ public struct SpotifyClient {
         }
         let payload = try JSONDecoder().decode(Payload.self, from: data)
         guard let item = payload.item else { return nil }
+        let names = item.artists.map(\.name)
+        let year = item.album.releaseDate.flatMap { $0.count >= 4 ? String($0.prefix(4)) : nil }
         return PlaybackState(
             track: item.name,
-            artist: item.artists.first?.name ?? "",
+            artist: names.first ?? "",
+            artists: names,
             album: item.album.name,
+            year: year,
             artworkURL: item.album.images.first.flatMap { URL(string: $0.url) },
             isPlaying: payload.isPlaying,
             progressMs: payload.progressMs ?? 0,

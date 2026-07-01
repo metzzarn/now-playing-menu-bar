@@ -10,12 +10,14 @@ final class PlaybackStateClientTests: XCTestCase {
         let json = """
         {"is_playing":true,"progress_ms":12000,
          "item":{"name":"Idioteque","duration_ms":312000,
-           "artists":[{"name":"Radiohead"}],
-           "album":{"name":"Kid A","images":[{"url":"https://img/1"}]}}}
+           "artists":[{"name":"Radiohead"},{"name":"Thom Yorke"}],
+           "album":{"name":"Kid A","release_date":"2000-10-02",
+             "images":[{"url":"https://img/1"}]}}}
         """
         let state = try await client(MockHTTP(status: 200, body: Data(json.utf8))).playbackState()
         XCTAssertEqual(state, PlaybackState(track: "Idioteque", artist: "Radiohead",
-            album: "Kid A", artworkURL: URL(string: "https://img/1"),
+            artists: ["Radiohead", "Thom Yorke"], album: "Kid A", year: "2000",
+            artworkURL: URL(string: "https://img/1"),
             isPlaying: true, progressMs: 12000, durationMs: 312000))
     }
 
