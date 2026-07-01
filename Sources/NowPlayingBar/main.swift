@@ -1,5 +1,7 @@
 import AppKit
 
-// Wiring is fleshed out in Task 8. For scaffold we just prove it links.
-_ = NSApplication.shared
-print("NowPlayingBar scaffold")
+let app = NSApplication.shared
+let delegate = AppDelegate()
+app.delegate = delegate
+app.setActivationPolicy(.accessory)
+app.run()
