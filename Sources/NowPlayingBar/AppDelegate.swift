@@ -114,9 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
 
         let menu: NSMenu
         if showRich {
-            menu = menuBuilder.richMenu(
-                contentView: nowPlayingView, target: self,
-                prefsAction: #selector(openPreferences), quitAction: #selector(quit))
+            menu = menuBuilder.richMenu(contentView: nowPlayingView)
         } else {
             menu = menuBuilder.simpleMenu(
                 isLoggedIn: loggedIn, hasClientID: config != nil, target: self,
