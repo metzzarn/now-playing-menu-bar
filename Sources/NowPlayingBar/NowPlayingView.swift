@@ -74,8 +74,7 @@ final class NowPlayingView: NSView {
         artworkView.layer?.masksToBounds = true
         artworkView.image = Self.placeholder
         artworkView.translatesAutoresizingMaskIntoConstraints = false
-        artworkView.widthAnchor.constraint(equalToConstant: 64).isActive = true
-        artworkView.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        artworkView.widthAnchor.constraint(equalTo: artworkView.heightAnchor).isActive = true
 
         artworkView.setContentHuggingPriority(.required, for: .horizontal)
 
@@ -113,7 +112,8 @@ final class NowPlayingView: NSView {
 
         let root = NSStackView(views: [artworkView, rightColumn])
         root.orientation = .horizontal
-        root.alignment = .centerY
+        root.alignment = .top
+        root.distribution = .fill
         root.spacing = 12
         root.translatesAutoresizingMaskIntoConstraints = false
         addSubview(root)
@@ -123,6 +123,8 @@ final class NowPlayingView: NSView {
             root.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             root.topAnchor.constraint(equalTo: topAnchor, constant: 12),
             root.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12),
+            artworkView.topAnchor.constraint(equalTo: root.topAnchor),
+            artworkView.bottomAnchor.constraint(equalTo: root.bottomAnchor),
             labels.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
             labels.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
             progressBar.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
