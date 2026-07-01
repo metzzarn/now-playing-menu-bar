@@ -16,7 +16,9 @@ public struct OAuthCallback: Equatable {
     }
 }
 
-public final class LoopbackServer {
+// All state is mutated only on the main queue (handlers and the timeout are
+// scheduled there), so the class is safe to treat as Sendable.
+public final class LoopbackServer: @unchecked Sendable {
     private let port: UInt16
     private var listener: NWListener?
     private var didFinish = false
@@ -32,7 +34,7 @@ public final class LoopbackServer {
     /// runs on the main queue, so `didFinish` guards against a double resume.
     public func waitForCode(timeout: TimeInterval = 120) async throws -> OAuthCallback {
         try await withCheckedThrowingContinuation { continuation in
-            func finish(_ result: Result<OAuthCallback, Error>) {
+            @Sendable func finish(_ result: Result<OAuthCallback, Error>) {
                 guard !didFinish else { return }
                 didFinish = true
                 stop()
