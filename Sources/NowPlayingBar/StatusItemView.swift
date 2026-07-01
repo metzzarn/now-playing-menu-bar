@@ -9,7 +9,8 @@ final class StatusItemView: NSView {
     private var progress: Double?
     private var style = MenuBarStyle(
         progressBarEnabled: false, thickness: 2, colorHex: "#1DB954FF",
-        scrollEnabled: false, scrollSpeed: 20, minWidth: 0, maxWidth: 150, pauseAtEnds: 1.5)
+        scrollEnabled: false, scrollSpeed: 20, useStaticWidth: false,
+        staticWidth: 150, maxWidth: 150, pauseAtEnds: 1.5)
 
     private var textWidth: CGFloat = 0
     private var scrollStart = Date()
@@ -18,10 +19,11 @@ final class StatusItemView: NSView {
     private let font = NSFont.menuBarFont(ofSize: 0)
     private let horizontalPadding: CGFloat = 6
 
-    /// Width the status item should occupy: the text width, clamped between the
-    /// style's min and max.
+    /// Width the status item should occupy: a fixed static width, or the text
+    /// width capped at the max width.
     var desiredWidth: CGFloat {
-        min(max(textWidth, style.minWidth), style.maxWidth) + horizontalPadding
+        let base = style.useStaticWidth ? style.staticWidth : min(textWidth, style.maxWidth)
+        return base + horizontalPadding
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
@@ -37,10 +39,10 @@ final class StatusItemView: NSView {
         needsDisplay = true
     }
 
-    // Decided against the cap width (style.maxWidth), not the current bounds, so the
+    // Decided against the active width cap, not the current bounds, so the
     // decision doesn't depend on statusItem.length having been applied yet.
     private var isScrolling: Bool {
-        style.scrollEnabled && textWidth > style.maxWidth + 0.5
+        style.scrollEnabled && textWidth > style.widthCap + 0.5
     }
 
     private func syncMarqueeTimer() {

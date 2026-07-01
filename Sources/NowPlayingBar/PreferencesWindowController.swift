@@ -16,7 +16,9 @@ final class PreferencesWindowController: NSWindowController {
     private let scrollEnabledButton = NSButton(
         checkboxWithTitle: "Scroll long titles", target: nil, action: nil)
     private let speedField = NSTextField()
-    private let minWidthField = NSTextField()
+    private let useStaticWidthButton = NSButton(
+        checkboxWithTitle: "Use static width (instead of max width)", target: nil, action: nil)
+    private let staticWidthField = NSTextField()
     private let maxWidthField = NSTextField()
     private let pauseField = NSTextField()
 
@@ -49,6 +51,7 @@ final class PreferencesWindowController: NSWindowController {
         tabView.translatesAutoresizingMaskIntoConstraints = false
         tabView.addTabViewItem(tab("Spotify", view: spotifyTab()))
         tabView.addTabViewItem(tab("Menu Bar", view: menuBarTab()))
+        tabView.selectTabViewItem(at: 1)  // default to Menu Bar
 
         let saveButton = NSButton(title: "Save", target: self, action: #selector(save))
         saveButton.keyEquivalent = "\r"
@@ -107,8 +110,9 @@ final class PreferencesWindowController: NSWindowController {
         colorWell.heightAnchor.constraint(equalToConstant: 24).isActive = true
 
         scrollEnabledButton.state = preferences.scrollEnabled ? .on : .off
+        useStaticWidthButton.state = preferences.useStaticWidth ? .on : .off
         configureNumberField(speedField, value: preferences.scrollSpeed)
-        configureNumberField(minWidthField, value: preferences.scrollMinWidth)
+        configureNumberField(staticWidthField, value: preferences.staticWidth)
         configureNumberField(maxWidthField, value: preferences.scrollMaxWidth)
         configureNumberField(pauseField, value: preferences.scrollPauseAtEnds)
     }
@@ -148,7 +152,8 @@ final class PreferencesWindowController: NSWindowController {
             scrollEnabledButton,
             scrollRow,
             divider(),
-            labeledRow("Min width (pt):", minWidthField),
+            useStaticWidthButton,
+            labeledRow("Static width (pt):", staticWidthField),
             labeledRow("Max width (pt):", maxWidthField),
         ])
     }
@@ -218,7 +223,8 @@ final class PreferencesWindowController: NSWindowController {
         preferences.progressBarColorHex = colorWell.color.hexRGBA
         preferences.scrollEnabled = scrollEnabledButton.state == .on
         preferences.scrollSpeed = Double(speedField.stringValue) ?? preferences.scrollSpeed
-        preferences.scrollMinWidth = Double(minWidthField.stringValue) ?? preferences.scrollMinWidth
+        preferences.useStaticWidth = useStaticWidthButton.state == .on
+        preferences.staticWidth = Double(staticWidthField.stringValue) ?? preferences.staticWidth
         preferences.scrollMaxWidth = Double(maxWidthField.stringValue) ?? preferences.scrollMaxWidth
         preferences.scrollPauseAtEnds = Double(pauseField.stringValue) ?? preferences.scrollPauseAtEnds
         onSave(preferences)

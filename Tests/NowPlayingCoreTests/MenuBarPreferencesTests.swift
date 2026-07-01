@@ -34,19 +34,19 @@ final class MenuBarPreferencesTests: XCTestCase {
         XCTAssertEqual(style.pauseAtEnds, 2)
     }
 
-    func testMinWidthRoundTripsAndClampsToMax() {
+    func testStaticWidthDefaultsAndRoundTrips() {
         var prefs = makePrefs()
-        prefs.scrollMinWidth = 80
-        prefs.scrollMaxWidth = 200
-        XCTAssertEqual(prefs.menuBarStyle.minWidth, 80)
+        let style = prefs.menuBarStyle
+        XCTAssertFalse(style.useStaticWidth)
+        XCTAssertEqual(style.staticWidth, 150)
+        XCTAssertEqual(style.widthCap, style.maxWidth)
 
-        // Min above max is clamped down to max.
-        prefs.scrollMinWidth = 300
-        XCTAssertEqual(prefs.menuBarStyle.minWidth, 200)
-    }
-
-    func testDefaultMinWidthIsZero() {
-        XCTAssertEqual(makePrefs().menuBarStyle.minWidth, 0)
+        prefs.useStaticWidth = true
+        prefs.staticWidth = 120
+        let updated = prefs.menuBarStyle
+        XCTAssertTrue(updated.useStaticWidth)
+        XCTAssertEqual(updated.staticWidth, 120)
+        XCTAssertEqual(updated.widthCap, 120)
     }
 
     func testThicknessClampedToRange() {
