@@ -1,6 +1,10 @@
 import Foundation
 import CoreGraphics
 
+public enum MenuBarTextAlignment: String, Equatable, CaseIterable {
+    case left, center, right
+}
+
 public struct MenuBarStyle: Equatable {
     public let progressBarEnabled: Bool
     public let thickness: CGFloat
@@ -11,10 +15,12 @@ public struct MenuBarStyle: Equatable {
     public let staticWidth: CGFloat
     public let maxWidth: CGFloat
     public let pauseAtEnds: TimeInterval
+    public let alignment: MenuBarTextAlignment
 
     public init(progressBarEnabled: Bool, thickness: CGFloat, colorHex: String,
                 scrollEnabled: Bool, scrollSpeed: CGFloat, useStaticWidth: Bool,
-                staticWidth: CGFloat, maxWidth: CGFloat, pauseAtEnds: TimeInterval) {
+                staticWidth: CGFloat, maxWidth: CGFloat, pauseAtEnds: TimeInterval,
+                alignment: MenuBarTextAlignment) {
         self.progressBarEnabled = progressBarEnabled
         self.thickness = thickness
         self.colorHex = colorHex
@@ -24,6 +30,7 @@ public struct MenuBarStyle: Equatable {
         self.staticWidth = staticWidth
         self.maxWidth = maxWidth
         self.pauseAtEnds = pauseAtEnds
+        self.alignment = alignment
     }
 
     /// The width cap the title is laid out against (static width when enabled,

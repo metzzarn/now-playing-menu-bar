@@ -10,7 +10,7 @@ final class StatusItemView: NSView {
     private var style = MenuBarStyle(
         progressBarEnabled: false, thickness: 2, colorHex: "#1DB954FF",
         scrollEnabled: false, scrollSpeed: 20, useStaticWidth: false,
-        staticWidth: 150, maxWidth: 150, pauseAtEnds: 1.5)
+        staticWidth: 150, maxWidth: 150, pauseAtEnds: 1.5, alignment: .left)
 
     private var textWidth: CGFloat = 0
     private var scrollStart = Date()
@@ -83,6 +83,11 @@ final class StatusItemView: NSView {
         } else {
             let paragraph = NSMutableParagraphStyle()
             paragraph.lineBreakMode = .byTruncatingTail
+            switch style.alignment {
+            case .left: paragraph.alignment = .left
+            case .center: paragraph.alignment = .center
+            case .right: paragraph.alignment = .right
+            }
             var truncating = attrs
             truncating[.paragraphStyle] = paragraph
             let rect = NSRect(x: horizontalPadding / 2, y: textY,

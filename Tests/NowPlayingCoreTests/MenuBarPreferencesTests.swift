@@ -49,6 +49,13 @@ final class MenuBarPreferencesTests: XCTestCase {
         XCTAssertEqual(updated.widthCap, 120)
     }
 
+    func testAlignmentDefaultsToLeftAndRoundTrips() {
+        var prefs = makePrefs()
+        XCTAssertEqual(prefs.menuBarStyle.alignment, .left)
+        prefs.textAlignment = .center
+        XCTAssertEqual(prefs.menuBarStyle.alignment, .center)
+    }
+
     func testThicknessClampedToRange() {
         var prefs = makePrefs()
         prefs.progressBarThickness = 99

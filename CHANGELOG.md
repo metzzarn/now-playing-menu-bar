@@ -9,7 +9,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Tabbed Preferences window: a "Spotify" tab (Client ID + Refresh) and a
   "Menu Bar" tab (progress bar + scrolling settings).
 - Menu-bar width mode toggle: either grow the item up to a max width, or use a
-  fixed static width. Preferences opens on the Menu Bar tab by default.
+  fixed static width (the inactive field is disabled). Preferences opens on the
+  Menu Bar tab by default.
+- Menu-bar title alignment setting (left / center / right).
 - Click the album art in the left-click menu to bring the Spotify app to the front.
 
 ## [0.3.0] - 2026-07-01

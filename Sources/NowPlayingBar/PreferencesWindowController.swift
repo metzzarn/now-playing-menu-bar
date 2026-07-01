@@ -21,16 +21,17 @@ final class PreferencesWindowController: NSWindowController {
     private let staticWidthField = NSTextField()
     private let maxWidthField = NSTextField()
     private let pauseField = NSTextField()
+    private let alignmentPopup = NSPopUpButton()
 
     init(preferences: Preferences, onSave: @escaping (Preferences) -> Void) {
         self.preferences = preferences
         self.onSave = onSave
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 400),
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 460),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered, defer: false)
         window.title = "Preferences"
-        window.contentMinSize = NSSize(width: 420, height: 380)
+        window.contentMinSize = NSSize(width: 460, height: 440)
         super.init(window: window)
         buildUI()
     }
@@ -111,10 +112,21 @@ final class PreferencesWindowController: NSWindowController {
 
         scrollEnabledButton.state = preferences.scrollEnabled ? .on : .off
         useStaticWidthButton.state = preferences.useStaticWidth ? .on : .off
+        useStaticWidthButton.target = self
+        useStaticWidthButton.action = #selector(widthModeChanged)
         configureNumberField(speedField, value: preferences.scrollSpeed)
         configureNumberField(staticWidthField, value: preferences.staticWidth)
         configureNumberField(maxWidthField, value: preferences.scrollMaxWidth)
         configureNumberField(pauseField, value: preferences.scrollPauseAtEnds)
+
+        MenuBarTextAlignment.allCases.forEach {
+            alignmentPopup.addItem(withTitle: $0.rawValue.capitalized)
+        }
+        if let index = MenuBarTextAlignment.allCases.firstIndex(of: preferences.textAlignment) {
+            alignmentPopup.selectItem(at: index)
+        }
+
+        updateWidthFieldStates()
     }
 
     // MARK: - Tabs
@@ -146,6 +158,8 @@ final class PreferencesWindowController: NSWindowController {
         scrollRow.spacing = 20
 
         return tabContainer([
+            labeledRow("Text alignment:", alignmentPopup),
+            divider(),
             progressEnabledButton,
             barRow,
             divider(),
@@ -214,6 +228,16 @@ final class PreferencesWindowController: NSWindowController {
         thicknessLabel.stringValue = "\(thicknessStepper.integerValue) pt"
     }
 
+    @objc private func widthModeChanged() {
+        updateWidthFieldStates()
+    }
+
+    private func updateWidthFieldStates() {
+        let staticOn = useStaticWidthButton.state == .on
+        staticWidthField.isEnabled = staticOn
+        maxWidthField.isEnabled = !staticOn
+    }
+
     @objc private func save() {
         let trimmed = clientIDField.stringValue.trimmingCharacters(in: .whitespaces)
         preferences.clientID = trimmed.isEmpty ? nil : trimmed
@@ -227,6 +251,7 @@ final class PreferencesWindowController: NSWindowController {
         preferences.staticWidth = Double(staticWidthField.stringValue) ?? preferences.staticWidth
         preferences.scrollMaxWidth = Double(maxWidthField.stringValue) ?? preferences.scrollMaxWidth
         preferences.scrollPauseAtEnds = Double(pauseField.stringValue) ?? preferences.scrollPauseAtEnds
+        preferences.textAlignment = MenuBarTextAlignment.allCases[alignmentPopup.indexOfSelectedItem]
         onSave(preferences)
     }
 }

@@ -16,6 +16,7 @@ public struct Preferences {
         static let staticWidth = "staticWidth"
         static let scrollMaxWidth = "scrollMaxWidth"
         static let scrollPauseAtEnds = "scrollPauseAtEnds"
+        static let textAlignment = "textAlignment"
     }
 
     private static let defaultColorHex = "#1DB954FF"
@@ -94,6 +95,13 @@ public struct Preferences {
         set { defaults.set(newValue, forKey: Key.scrollPauseAtEnds) }
     }
 
+    public var textAlignment: MenuBarTextAlignment {
+        get {
+            (defaults.string(forKey: Key.textAlignment)).flatMap(MenuBarTextAlignment.init) ?? .left
+        }
+        set { defaults.set(newValue.rawValue, forKey: Key.textAlignment) }
+    }
+
     public var menuBarStyle: MenuBarStyle {
         MenuBarStyle(
             progressBarEnabled: progressBarEnabled,
@@ -104,6 +112,7 @@ public struct Preferences {
             useStaticWidth: useStaticWidth,
             staticWidth: CGFloat(max(40, staticWidth)),
             maxWidth: CGFloat(max(40, scrollMaxWidth)),
-            pauseAtEnds: max(0, scrollPauseAtEnds))
+            pauseAtEnds: max(0, scrollPauseAtEnds),
+            alignment: textAlignment)
     }
 }
