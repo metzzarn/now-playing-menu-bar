@@ -16,6 +16,7 @@ final class PreferencesWindowController: NSWindowController {
     private let scrollEnabledButton = NSButton(
         checkboxWithTitle: "Scroll long titles", target: nil, action: nil)
     private let speedField = NSTextField()
+    private let minWidthField = NSTextField()
     private let maxWidthField = NSTextField()
     private let pauseField = NSTextField()
 
@@ -23,7 +24,7 @@ final class PreferencesWindowController: NSWindowController {
         self.preferences = preferences
         self.onSave = onSave
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 360),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered, defer: false)
         window.title = "Preferences"
@@ -41,7 +42,36 @@ final class PreferencesWindowController: NSWindowController {
 
     private func buildUI() {
         guard let content = window?.contentView else { return }
+        configureControls()
 
+        let tabView = NSTabView()
+        tabView.translatesAutoresizingMaskIntoConstraints = false
+        tabView.addTabViewItem(tab("Spotify", view: spotifyTab()))
+        tabView.addTabViewItem(tab("Menu Bar", view: menuBarTab()))
+
+        let saveButton = NSButton(title: "Save", target: self, action: #selector(save))
+        saveButton.keyEquivalent = "\r"
+        saveButton.setContentHuggingPriority(.required, for: .horizontal)
+        let saveRow = NSStackView(views: [NSView(), saveButton])
+        saveRow.orientation = .horizontal
+        saveRow.translatesAutoresizingMaskIntoConstraints = false
+
+        content.addSubview(tabView)
+        content.addSubview(saveRow)
+        NSLayoutConstraint.activate([
+            tabView.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 20),
+            tabView.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
+            tabView.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
+            saveRow.topAnchor.constraint(equalTo: tabView.bottomAnchor, constant: 12),
+            saveRow.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 20),
+            saveRow.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
+            saveRow.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -20),
+        ])
+    }
+
+    // MARK: - Control configuration
+
+    private func configureControls() {
         clientIDField.stringValue = preferences.clientID ?? ""
         clientIDField.placeholderString = "Spotify Client ID"
         clientIDField.usesSingleLineMode = true
@@ -77,12 +107,21 @@ final class PreferencesWindowController: NSWindowController {
 
         scrollEnabledButton.state = preferences.scrollEnabled ? .on : .off
         configureNumberField(speedField, value: preferences.scrollSpeed)
+        configureNumberField(minWidthField, value: preferences.scrollMinWidth)
         configureNumberField(maxWidthField, value: preferences.scrollMaxWidth)
         configureNumberField(pauseField, value: preferences.scrollPauseAtEnds)
+    }
 
-        let saveButton = NSButton(title: "Save", target: self, action: #selector(save))
-        saveButton.keyEquivalent = "\r"
+    // MARK: - Tabs
 
+    private func spotifyTab() -> NSView {
+        tabContainer([
+            labeledRow("Client ID:", clientIDField),
+            labeledRow("Refresh:", intervalPopup),
+        ])
+    }
+
+    private func menuBarTab() -> NSView {
         let thicknessRow = NSStackView(views: [thicknessStepper, thicknessLabel])
         thicknessRow.orientation = .horizontal
         thicknessRow.spacing = 6
@@ -101,41 +140,41 @@ final class PreferencesWindowController: NSWindowController {
         scrollRow.orientation = .horizontal
         scrollRow.spacing = 20
 
-        // Save pinned right within a full-width row; the spacer expands.
-        saveButton.setContentHuggingPriority(.required, for: .horizontal)
-        let saveRow = NSStackView(views: [NSView(), saveButton])
-        saveRow.orientation = .horizontal
-
-        let scrollDivider = divider()
-
-        let stack = NSStackView(views: [
-            labeledRow("Client ID:", clientIDField),
-            labeledRow("Refresh:", intervalPopup),
-            sectionLabel("Menu Bar"),
+        return tabContainer([
             progressEnabledButton,
             barRow,
-            scrollDivider,
+            divider(),
             scrollEnabledButton,
             scrollRow,
+            divider(),
+            labeledRow("Min width (pt):", minWidthField),
             labeledRow("Max width (pt):", maxWidthField),
-            saveRow,
         ])
-        // Left-aligned so a row changing width (e.g. the thickness label) never
-        // shifts the other rows.
+    }
+
+    /// Wraps rows in a padded, left-aligned vertical stack; separators stretch full width.
+    private func tabContainer(_ rows: [NSView]) -> NSView {
+        let stack = NSStackView(views: rows)
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
-        content.addSubview(stack)
 
+        let container = NSView()
+        container.addSubview(stack)
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
-            stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
-            saveRow.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
-            scrollDivider.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 16),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -16),
         ])
+        for row in rows where row is NSBox {
+            row.trailingAnchor.constraint(equalTo: stack.trailingAnchor).isActive = true
+        }
+        return container
     }
+
+    // MARK: - Row helpers
 
     private func configureNumberField(_ field: NSTextField, value: Double) {
         field.stringValue = value == value.rounded() ? String(Int(value)) : String(value)
@@ -158,10 +197,11 @@ final class PreferencesWindowController: NSWindowController {
         return box
     }
 
-    private func sectionLabel(_ title: String) -> NSView {
-        let label = NSTextField(labelWithString: title)
-        label.font = .boldSystemFont(ofSize: 12)
-        return label
+    private func tab(_ label: String, view: NSView) -> NSTabViewItem {
+        let item = NSTabViewItem()
+        item.label = label
+        item.view = view
+        return item
     }
 
     @objc private func thicknessChanged() {
@@ -177,6 +217,7 @@ final class PreferencesWindowController: NSWindowController {
         preferences.progressBarColorHex = colorWell.color.hexRGBA
         preferences.scrollEnabled = scrollEnabledButton.state == .on
         preferences.scrollSpeed = Double(speedField.stringValue) ?? preferences.scrollSpeed
+        preferences.scrollMinWidth = Double(minWidthField.stringValue) ?? preferences.scrollMinWidth
         preferences.scrollMaxWidth = Double(maxWidthField.stringValue) ?? preferences.scrollMaxWidth
         preferences.scrollPauseAtEnds = Double(pauseField.stringValue) ?? preferences.scrollPauseAtEnds
         onSave(preferences)

@@ -34,6 +34,21 @@ final class MenuBarPreferencesTests: XCTestCase {
         XCTAssertEqual(style.pauseAtEnds, 2)
     }
 
+    func testMinWidthRoundTripsAndClampsToMax() {
+        var prefs = makePrefs()
+        prefs.scrollMinWidth = 80
+        prefs.scrollMaxWidth = 200
+        XCTAssertEqual(prefs.menuBarStyle.minWidth, 80)
+
+        // Min above max is clamped down to max.
+        prefs.scrollMinWidth = 300
+        XCTAssertEqual(prefs.menuBarStyle.minWidth, 200)
+    }
+
+    func testDefaultMinWidthIsZero() {
+        XCTAssertEqual(makePrefs().menuBarStyle.minWidth, 0)
+    }
+
     func testThicknessClampedToRange() {
         var prefs = makePrefs()
         prefs.progressBarThickness = 99

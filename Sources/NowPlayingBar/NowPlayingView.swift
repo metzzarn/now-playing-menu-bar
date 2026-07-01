@@ -6,6 +6,7 @@ protocol NowPlayingViewDelegate: AnyObject {
     func didTapPrevious()
     func didTapPlayPause()
     func didTapNext()
+    func didTapArtwork()
 }
 
 final class NowPlayingView: NSView {
@@ -75,6 +76,8 @@ final class NowPlayingView: NSView {
         artworkView.image = Self.placeholder
         artworkView.translatesAutoresizingMaskIntoConstraints = false
         artworkView.widthAnchor.constraint(equalTo: artworkView.heightAnchor).isActive = true
+        artworkView.addGestureRecognizer(
+            NSClickGestureRecognizer(target: self, action: #selector(artworkTapped)))
 
         artworkView.setContentHuggingPriority(.required, for: .horizontal)
 
@@ -178,4 +181,5 @@ final class NowPlayingView: NSView {
     @objc private func previousTapped() { delegate?.didTapPrevious() }
     @objc private func playPauseTapped() { delegate?.didTapPlayPause() }
     @objc private func nextTapped() { delegate?.didTapNext() }
+    @objc private func artworkTapped() { delegate?.didTapArtwork() }
 }

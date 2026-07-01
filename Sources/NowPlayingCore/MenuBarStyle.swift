@@ -7,17 +7,19 @@ public struct MenuBarStyle: Equatable {
     public let colorHex: String
     public let scrollEnabled: Bool
     public let scrollSpeed: CGFloat
+    public let minWidth: CGFloat
     public let maxWidth: CGFloat
     public let pauseAtEnds: TimeInterval
 
     public init(progressBarEnabled: Bool, thickness: CGFloat, colorHex: String,
-                scrollEnabled: Bool, scrollSpeed: CGFloat, maxWidth: CGFloat,
-                pauseAtEnds: TimeInterval) {
+                scrollEnabled: Bool, scrollSpeed: CGFloat, minWidth: CGFloat,
+                maxWidth: CGFloat, pauseAtEnds: TimeInterval) {
         self.progressBarEnabled = progressBarEnabled
         self.thickness = thickness
         self.colorHex = colorHex
         self.scrollEnabled = scrollEnabled
         self.scrollSpeed = scrollSpeed
+        self.minWidth = minWidth
         self.maxWidth = maxWidth
         self.pauseAtEnds = pauseAtEnds
     }

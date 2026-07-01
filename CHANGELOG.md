@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-07-01
+
+### Added
+- Tabbed Preferences window: a "Spotify" tab (Client ID + Refresh) and a
+  "Menu Bar" tab (progress bar + scrolling settings).
+- "Min width" menu-bar setting: the status item width is clamped between min and
+  max, so short titles no longer shrink the item below a chosen floor.
+- Click the album art in the left-click menu to bring the Spotify app to the front.
+
 ## [0.3.0] - 2026-07-01
 
 ### Added

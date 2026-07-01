@@ -343,6 +343,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     func didTapNext() { transport { try await $0.next() } }
     func didTapPrevious() { transport { try await $0.previous() } }
 
+    func didTapArtwork() {
+        // Launches Spotify if needed and brings it to the front.
+        if let url = URL(string: "spotify:") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     private func transport(_ action: @escaping (SpotifyClient) async throws -> Void) {
         guard let client else { return }
         Task {

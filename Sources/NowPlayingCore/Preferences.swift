@@ -12,6 +12,7 @@ public struct Preferences {
         static let progressBarColorHex = "progressBarColorHex"
         static let scrollEnabled = "scrollEnabled"
         static let scrollSpeed = "scrollSpeed"
+        static let scrollMinWidth = "scrollMinWidth"
         static let scrollMaxWidth = "scrollMaxWidth"
         static let scrollPauseAtEnds = "scrollPauseAtEnds"
     }
@@ -72,6 +73,11 @@ public struct Preferences {
         set { defaults.set(newValue, forKey: Key.scrollSpeed) }
     }
 
+    public var scrollMinWidth: Double {
+        get { (defaults.object(forKey: Key.scrollMinWidth) as? Double) ?? 0 }
+        set { defaults.set(newValue, forKey: Key.scrollMinWidth) }
+    }
+
     public var scrollMaxWidth: Double {
         get { (defaults.object(forKey: Key.scrollMaxWidth) as? Double) ?? 150 }
         set { defaults.set(newValue, forKey: Key.scrollMaxWidth) }
@@ -83,13 +89,15 @@ public struct Preferences {
     }
 
     public var menuBarStyle: MenuBarStyle {
-        MenuBarStyle(
+        let maxWidth = max(40, scrollMaxWidth)
+        return MenuBarStyle(
             progressBarEnabled: progressBarEnabled,
             thickness: CGFloat(min(4, max(1, progressBarThickness))),
             colorHex: progressBarColorHex,
             scrollEnabled: scrollEnabled,
             scrollSpeed: CGFloat(max(0, scrollSpeed)),
-            maxWidth: CGFloat(max(40, scrollMaxWidth)),
+            minWidth: CGFloat(max(0, min(scrollMinWidth, maxWidth))),
+            maxWidth: CGFloat(maxWidth),
             pauseAtEnds: max(0, scrollPauseAtEnds))
     }
 }
