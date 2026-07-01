@@ -3,6 +3,19 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-07-01
+
+### Added
+- Optional thin progress bar under the menu-bar track title, with configurable
+  enable/disable, thickness (1–4 pt), and color (color picker).
+- Optional back-and-forth (marquee) scrolling of long menu-bar titles, with
+  configurable enable/disable, speed, max width before scrolling, and end pause.
+- Preferences "Menu Bar" section for all of the above.
+
+### Changed
+- Menu-bar status item is now custom-drawn (title + optional bar + optional scroll)
+  instead of a plain text title; clicks still route to the same left/right menus.
+
 ## [0.2.0] - 2026-07-01
 
 ### Added

@@ -8,11 +8,22 @@ final class PreferencesWindowController: NSWindowController {
     private let intervalPopup = NSPopUpButton()
     private static let intervals: [TimeInterval] = [3, 5, 10]
 
+    private let progressEnabledButton = NSButton(
+        checkboxWithTitle: "Show progress bar", target: nil, action: nil)
+    private let thicknessStepper = NSStepper()
+    private let thicknessLabel = NSTextField(labelWithString: "")
+    private let colorWell = NSColorWell()
+    private let scrollEnabledButton = NSButton(
+        checkboxWithTitle: "Scroll long titles", target: nil, action: nil)
+    private let speedField = NSTextField()
+    private let maxWidthField = NSTextField()
+    private let pauseField = NSTextField()
+
     init(preferences: Preferences, onSave: @escaping (Preferences) -> Void) {
         self.preferences = preferences
         self.onSave = onSave
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 380, height: 170),
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 360),
             styleMask: [.titled, .closable],
             backing: .buffered, defer: false)
         window.title = "Preferences"
@@ -47,17 +58,49 @@ final class PreferencesWindowController: NSWindowController {
             intervalPopup.selectItem(at: 1)
         }
 
+        progressEnabledButton.state = preferences.progressBarEnabled ? .on : .off
+
+        thicknessStepper.minValue = 1
+        thicknessStepper.maxValue = 4
+        thicknessStepper.increment = 1
+        thicknessStepper.integerValue = Int(preferences.progressBarThickness)
+        thicknessStepper.target = self
+        thicknessStepper.action = #selector(thicknessChanged)
+        thicknessLabel.stringValue = "\(Int(preferences.progressBarThickness)) pt"
+
+        colorWell.color = NSColor.fromHex(preferences.progressBarColorHex) ?? .systemGreen
+        colorWell.translatesAutoresizingMaskIntoConstraints = false
+        colorWell.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        colorWell.heightAnchor.constraint(equalToConstant: 24).isActive = true
+
+        scrollEnabledButton.state = preferences.scrollEnabled ? .on : .off
+        configureNumberField(speedField, value: preferences.scrollSpeed)
+        configureNumberField(maxWidthField, value: preferences.scrollMaxWidth)
+        configureNumberField(pauseField, value: preferences.scrollPauseAtEnds)
+
         let saveButton = NSButton(title: "Save", target: self, action: #selector(save))
         saveButton.keyEquivalent = "\r"
+
+        let thicknessRow = NSStackView(views: [thicknessStepper, thicknessLabel])
+        thicknessRow.orientation = .horizontal
+        thicknessRow.spacing = 6
 
         let stack = NSStackView(views: [
             labeledRow("Client ID:", clientIDField),
             labeledRow("Refresh:", intervalPopup),
+            sectionLabel("Menu Bar"),
+            progressEnabledButton,
+            labeledRow("Bar thickness:", thicknessRow),
+            labeledRow("Bar color:", colorWell),
+            scrollEnabledButton,
+            labeledRow("Scroll speed (pt/s):", speedField),
+            labeledRow("Max width (pt):", maxWidthField),
+            labeledRow("End pause (s):", pauseField),
             saveButton,
         ])
         stack.orientation = .vertical
         stack.alignment = .trailing
-        stack.spacing = 16
+        stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(stack)
 
@@ -68,6 +111,12 @@ final class PreferencesWindowController: NSWindowController {
         ])
     }
 
+    private func configureNumberField(_ field: NSTextField, value: Double) {
+        field.stringValue = value == value.rounded() ? String(Int(value)) : String(value)
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.widthAnchor.constraint(equalToConstant: 60).isActive = true
+    }
+
     private func labeledRow(_ title: String, _ field: NSView) -> NSView {
         let label = NSTextField(labelWithString: title)
         let row = NSStackView(views: [label, field])
@@ -76,10 +125,27 @@ final class PreferencesWindowController: NSWindowController {
         return row
     }
 
+    private func sectionLabel(_ title: String) -> NSView {
+        let label = NSTextField(labelWithString: title)
+        label.font = .boldSystemFont(ofSize: 12)
+        return label
+    }
+
+    @objc private func thicknessChanged() {
+        thicknessLabel.stringValue = "\(thicknessStepper.integerValue) pt"
+    }
+
     @objc private func save() {
         let trimmed = clientIDField.stringValue.trimmingCharacters(in: .whitespaces)
         preferences.clientID = trimmed.isEmpty ? nil : trimmed
         preferences.refreshInterval = Self.intervals[intervalPopup.indexOfSelectedItem]
+        preferences.progressBarEnabled = progressEnabledButton.state == .on
+        preferences.progressBarThickness = thicknessStepper.doubleValue
+        preferences.progressBarColorHex = colorWell.color.hexRGBA
+        preferences.scrollEnabled = scrollEnabledButton.state == .on
+        preferences.scrollSpeed = Double(speedField.stringValue) ?? preferences.scrollSpeed
+        preferences.scrollMaxWidth = Double(maxWidthField.stringValue) ?? preferences.scrollMaxWidth
+        preferences.scrollPauseAtEnds = Double(pauseField.stringValue) ?? preferences.scrollPauseAtEnds
         onSave(preferences)
         window?.close()
     }

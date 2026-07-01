@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     private var statusItem: NSStatusItem!
     private let menuBuilder = MenuBarController()
     private let nowPlayingView = NowPlayingView()
+    private let statusView = StatusItemView()
     private let artworkLoader = ArtworkLoader()
 
     private var preferences = Preferences()
@@ -36,11 +37,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         configureButtonAction()
         startInterpolationTimer()
-        updateTitle()
+        refreshMenuBar()
 
         Task {
             await refreshLoginState()
-            updateTitle()
+            refreshMenuBar()
             if loggedIn {
                 startPolling()
                 await tick()
@@ -105,6 +106,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         button.target = self
         button.action = #selector(statusItemClicked)
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+
+        statusView.translatesAutoresizingMaskIntoConstraints = false
+        button.addSubview(statusView)
+        NSLayoutConstraint.activate([
+            statusView.leadingAnchor.constraint(equalTo: button.leadingAnchor),
+            statusView.trailingAnchor.constraint(equalTo: button.trailingAnchor),
+            statusView.topAnchor.constraint(equalTo: button.topAnchor),
+            statusView.bottomAnchor.constraint(equalTo: button.bottomAnchor),
+        ])
     }
 
     @objc private func statusItemClicked() {
@@ -153,6 +163,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         guard let playback, playback.isPlaying else { return }
         localProgressMs = min(localProgressMs + 1000, playback.durationMs)
         nowPlayingView.updateProgress(ms: localProgressMs)
+        refreshMenuBar()
     }
 
     private func tick() async {
@@ -161,7 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         defer { isTicking = false }
 
         await refreshLoginState()
-        guard loggedIn else { updateTitle(); return }
+        guard loggedIn else { refreshMenuBar(); return }
         do {
             try await updatePlayback(client)
         } catch SpotifyClientError.unauthorized {
@@ -171,7 +182,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
             } catch {
                 loggedIn = false
                 playback = nil
-                updateTitle()
+                refreshMenuBar()
             }
         } catch {
             // Network hiccup: keep the last shown state, retry next tick.
@@ -185,7 +196,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
             playback = nil
             currentArtwork = nil
             nowPlayingView.showNothingPlaying()
-            updateTitle()
+            refreshMenuBar()
         }
     }
 
@@ -194,7 +205,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         playback = state
         localProgressMs = state.progressMs
         if trackChanged { currentArtwork = nil }
-        updateTitle()
+        refreshMenuBar()
         nowPlayingView.update(state: state, artwork: currentArtwork)
 
         if trackChanged, let url = state.artworkURL {
@@ -209,16 +220,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         }
     }
 
-    private func updateTitle() {
-        let display: DisplayState
+    private func refreshMenuBar() {
+        let text: String
+        let progress: Double?
         if !loggedIn {
-            display = .loggedOut
+            text = "Login"
+            progress = nil
         } else if let playback {
-            display = .playing(NowPlaying(artist: playback.artist, track: playback.track))
+            text = "\(playback.artist) — \(playback.track)"
+            progress = playback.durationMs > 0
+                ? Double(localProgressMs) / Double(playback.durationMs) : nil
         } else {
-            display = .idle
+            text = "♪"
+            progress = nil
         }
-        statusItem.button?.title = TitleFormatter.title(for: display)
+        statusView.update(text: text, progress: progress, style: preferences.menuBarStyle)
+        statusItem.length = statusView.desiredWidth
     }
 
     // MARK: - Auth
@@ -233,7 +250,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 playback = nil
                 currentArtwork = nil
                 stopPolling()
-                updateTitle()
+                refreshMenuBar()
             } else {
                 await login()
             }
@@ -276,7 +293,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         playback = nil
         currentArtwork = nil
         stopPolling()
-        updateTitle()
+        refreshMenuBar()
     }
 
     // MARK: - Preferences
@@ -295,7 +312,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 } else {
                     self.stopPolling()
                 }
-                self.updateTitle()
+                self.refreshMenuBar()
             }
         }
         prefsController = controller
