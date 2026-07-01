@@ -26,16 +26,20 @@ final class StatusItemView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     func update(text: String, progress: Double?, style: MenuBarStyle) {
+        let textChanged = text != self.text
         self.text = text
         self.progress = progress
         self.style = style
         self.textWidth = (text as NSString).size(withAttributes: [.font: font]).width
+        if textChanged { scrollStart = Date() }
         syncMarqueeTimer()
         needsDisplay = true
     }
 
+    // Decided against the cap width (style.maxWidth), not the current bounds, so the
+    // decision doesn't depend on statusItem.length having been applied yet.
     private var isScrolling: Bool {
-        style.scrollEnabled && textWidth > (bounds.width - horizontalPadding) + 0.5
+        style.scrollEnabled && textWidth > style.maxWidth + 0.5
     }
 
     private func syncMarqueeTimer() {

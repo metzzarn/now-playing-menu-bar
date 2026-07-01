@@ -20,6 +20,7 @@ public struct ColorComponents: Equatable {
         if string.hasPrefix("#") { string.removeFirst() }
         let hasAlpha = string.count == 8
         guard string.count == 6 || string.count == 8,
+              string.allSatisfy(\.isHexDigit),
               let value = UInt64(string, radix: 16) else {
             return nil
         }

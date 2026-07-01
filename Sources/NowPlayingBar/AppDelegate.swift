@@ -235,7 +235,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
             progress = nil
         }
         statusView.update(text: text, progress: progress, style: preferences.menuBarStyle)
-        statusItem.length = statusView.desiredWidth
+        let width = statusView.desiredWidth
+        if statusItem.length != width { statusItem.length = width }
     }
 
     // MARK: - Auth

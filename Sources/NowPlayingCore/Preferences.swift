@@ -53,7 +53,7 @@ public struct Preferences {
     }
 
     public var progressBarThickness: Double {
-        get { let v = defaults.double(forKey: Key.progressBarThickness); return v == 0 ? 2 : v }
+        get { (defaults.object(forKey: Key.progressBarThickness) as? Double) ?? 2 }
         set { defaults.set(newValue, forKey: Key.progressBarThickness) }
     }
 
@@ -68,17 +68,17 @@ public struct Preferences {
     }
 
     public var scrollSpeed: Double {
-        get { let v = defaults.double(forKey: Key.scrollSpeed); return v == 0 ? 40 : v }
+        get { (defaults.object(forKey: Key.scrollSpeed) as? Double) ?? 40 }
         set { defaults.set(newValue, forKey: Key.scrollSpeed) }
     }
 
     public var scrollMaxWidth: Double {
-        get { let v = defaults.double(forKey: Key.scrollMaxWidth); return v == 0 ? 180 : v }
+        get { (defaults.object(forKey: Key.scrollMaxWidth) as? Double) ?? 180 }
         set { defaults.set(newValue, forKey: Key.scrollMaxWidth) }
     }
 
     public var scrollPauseAtEnds: Double {
-        get { let v = defaults.double(forKey: Key.scrollPauseAtEnds); return v == 0 ? 1.5 : v }
+        get { (defaults.object(forKey: Key.scrollPauseAtEnds) as? Double) ?? 1.5 }
         set { defaults.set(newValue, forKey: Key.scrollPauseAtEnds) }
     }
 
@@ -88,8 +88,8 @@ public struct Preferences {
             thickness: CGFloat(min(4, max(1, progressBarThickness))),
             colorHex: progressBarColorHex,
             scrollEnabled: scrollEnabled,
-            scrollSpeed: CGFloat(scrollSpeed),
-            maxWidth: CGFloat(scrollMaxWidth),
-            pauseAtEnds: scrollPauseAtEnds)
+            scrollSpeed: CGFloat(max(0, scrollSpeed)),
+            maxWidth: CGFloat(max(40, scrollMaxWidth)),
+            pauseAtEnds: max(0, scrollPauseAtEnds))
     }
 }

@@ -29,4 +29,9 @@ final class ColorComponentsTests: XCTestCase {
     func testRejectsNonHex() {
         XCTAssertNil(ColorComponents.parse(hex: "#GGGGGG"))
     }
+
+    func testRejectsSignCharacter() {
+        XCTAssertNil(ColorComponents.parse(hex: "+1B954"))
+        XCTAssertNil(ColorComponents.parse(hex: "-1B954A"))
+    }
 }
