@@ -104,8 +104,20 @@ final class NowPlayingView: NSView {
         buttons.orientation = .horizontal
         buttons.alignment = .centerY
         buttons.spacing = 28
+        buttons.translatesAutoresizingMaskIntoConstraints = false
 
-        let rightColumn = NSStackView(views: [labels, progressBar, times, buttons])
+        // Full-width row so the buttons can center without fighting the column's
+        // .leading alignment.
+        let buttonRow = NSView()
+        buttonRow.translatesAutoresizingMaskIntoConstraints = false
+        buttonRow.addSubview(buttons)
+        NSLayoutConstraint.activate([
+            buttons.centerXAnchor.constraint(equalTo: buttonRow.centerXAnchor),
+            buttons.topAnchor.constraint(equalTo: buttonRow.topAnchor),
+            buttons.bottomAnchor.constraint(equalTo: buttonRow.bottomAnchor),
+        ])
+
+        let rightColumn = NSStackView(views: [labels, progressBar, times, buttonRow])
         rightColumn.orientation = .vertical
         rightColumn.alignment = .leading
         rightColumn.spacing = 8
@@ -131,7 +143,8 @@ final class NowPlayingView: NSView {
             progressBar.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
             times.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
             times.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
-            buttons.centerXAnchor.constraint(equalTo: rightColumn.centerXAnchor),
+            buttonRow.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
+            buttonRow.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
         ])
     }
 
