@@ -92,7 +92,7 @@ public struct Preferences {
     }
 
     public var scrollPauseAtEnds: Double {
-        get { (defaults.object(forKey: Key.scrollPauseAtEnds) as? Double) ?? 1.5 }
+        get { (defaults.object(forKey: Key.scrollPauseAtEnds) as? Double) ?? 1 }
         set { defaults.set(newValue, forKey: Key.scrollPauseAtEnds) }
     }
 

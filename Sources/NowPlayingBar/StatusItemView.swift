@@ -10,7 +10,7 @@ final class StatusItemView: NSView {
     private var style = MenuBarStyle(
         progressBarEnabled: false, thickness: 2, colorHex: "#1DB954FF",
         scrollEnabled: false, scrollSpeed: 20, useStaticWidth: false,
-        staticWidth: 150, maxWidth: 150, pauseAtEnds: 1.5, alignment: .left)
+        staticWidth: 150, maxWidth: 150, pauseAtEnds: 1, alignment: .left)
 
     private var textWidth: CGFloat = 0
     private var scrollStart = Date()
