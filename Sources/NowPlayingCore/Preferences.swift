@@ -107,8 +107,12 @@ public struct Preferences {
 
     public var trackTemplate: String {
         get {
-            let value = defaults.string(forKey: Key.trackTemplate)
-            return (value?.isEmpty == false) ? value! : Self.defaultTrackTemplate
+            guard let value = defaults.string(forKey: Key.trackTemplate),
+                  !value.isEmpty,
+                  TrackTemplate.validate(value) == nil else {
+                return Self.defaultTrackTemplate
+            }
+            return value
         }
         set { defaults.set(newValue, forKey: Key.trackTemplate) }
     }

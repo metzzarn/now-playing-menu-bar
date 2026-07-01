@@ -22,4 +22,21 @@ final class PreferencesTests: XCTestCase {
         prefs.refreshInterval = 10
         XCTAssertEqual(prefs.refreshInterval, 10)
     }
+
+    func testTrackTemplateDefaultsWhenUnset() {
+        XCTAssertEqual(Preferences(defaults: makeDefaults()).trackTemplate,
+                       Preferences.defaultTrackTemplate)
+    }
+
+    func testTrackTemplateFallsBackWhenInvalid() {
+        var prefs = Preferences(defaults: makeDefaults())
+        prefs.trackTemplate = "<foo> - <title>"  // unknown variable
+        XCTAssertEqual(prefs.trackTemplate, Preferences.defaultTrackTemplate)
+    }
+
+    func testTrackTemplateRoundTripsWhenValid() {
+        var prefs = Preferences(defaults: makeDefaults())
+        prefs.trackTemplate = "<title> (<year>)"
+        XCTAssertEqual(prefs.trackTemplate, "<title> (<year>)")
+    }
 }
