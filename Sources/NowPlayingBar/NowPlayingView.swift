@@ -26,7 +26,7 @@ final class NowPlayingView: NSView {
         systemSymbolName: "music.note", accessibilityDescription: nil) ?? NSImage()
 
     override init(frame frameRect: NSRect) {
-        super.init(frame: NSRect(x: 0, y: 0, width: 300, height: 160))
+        super.init(frame: NSRect(x: 0, y: 0, width: 340, height: 150))
         setup()
     }
 
@@ -77,15 +77,12 @@ final class NowPlayingView: NSView {
         artworkView.widthAnchor.constraint(equalToConstant: 64).isActive = true
         artworkView.heightAnchor.constraint(equalToConstant: 64).isActive = true
 
+        artworkView.setContentHuggingPriority(.required, for: .horizontal)
+
         let labels = NSStackView(views: [trackLabel, artistLabel, albumLabel])
         labels.orientation = .vertical
         labels.alignment = .leading
         labels.spacing = 2
-
-        let top = NSStackView(views: [artworkView, labels])
-        top.orientation = .horizontal
-        top.alignment = .top
-        top.spacing = 10
 
         progressBar.style = .bar
         progressBar.isIndeterminate = false
@@ -109,10 +106,15 @@ final class NowPlayingView: NSView {
         buttons.alignment = .centerY
         buttons.spacing = 28
 
-        let root = NSStackView(views: [top, progressBar, times, buttons])
-        root.orientation = .vertical
-        root.alignment = .leading
-        root.spacing = 10
+        let rightColumn = NSStackView(views: [labels, progressBar, times, buttons])
+        rightColumn.orientation = .vertical
+        rightColumn.alignment = .leading
+        rightColumn.spacing = 8
+
+        let root = NSStackView(views: [artworkView, rightColumn])
+        root.orientation = .horizontal
+        root.alignment = .centerY
+        root.spacing = 12
         root.translatesAutoresizingMaskIntoConstraints = false
         addSubview(root)
 
@@ -121,13 +123,13 @@ final class NowPlayingView: NSView {
             root.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             root.topAnchor.constraint(equalTo: topAnchor, constant: 12),
             root.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12),
-            top.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            top.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            progressBar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            progressBar.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            times.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            times.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            buttons.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            labels.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
+            labels.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
+            progressBar.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
+            progressBar.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
+            times.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
+            times.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
+            buttons.centerXAnchor.constraint(equalTo: rightColumn.centerXAnchor),
         ])
     }
 
