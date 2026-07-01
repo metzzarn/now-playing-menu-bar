@@ -24,7 +24,7 @@ final class PreferencesWindowController: NSWindowController {
         self.onSave = onSave
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 360),
-            styleMask: [.titled, .closable],
+            styleMask: [.titled, .closable, .resizable],
             backing: .buffered, defer: false)
         window.title = "Preferences"
         super.init(window: window)
@@ -85,17 +85,29 @@ final class PreferencesWindowController: NSWindowController {
         thicknessRow.orientation = .horizontal
         thicknessRow.spacing = 6
 
+        let barRow = NSStackView(views: [
+            labeledRow("Bar thickness:", thicknessRow),
+            labeledRow("Bar color:", colorWell),
+        ])
+        barRow.orientation = .horizontal
+        barRow.spacing = 20
+
+        let scrollRow = NSStackView(views: [
+            labeledRow("Scroll speed (pt/s):", speedField),
+            labeledRow("End pause (s):", pauseField),
+        ])
+        scrollRow.orientation = .horizontal
+        scrollRow.spacing = 20
+
         let stack = NSStackView(views: [
             labeledRow("Client ID:", clientIDField),
             labeledRow("Refresh:", intervalPopup),
             sectionLabel("Menu Bar"),
             progressEnabledButton,
-            labeledRow("Bar thickness:", thicknessRow),
-            labeledRow("Bar color:", colorWell),
+            barRow,
             scrollEnabledButton,
-            labeledRow("Scroll speed (pt/s):", speedField),
+            scrollRow,
             labeledRow("Max width (pt):", maxWidthField),
-            labeledRow("End pause (s):", pauseField),
             saveButton,
         ])
         stack.orientation = .vertical
@@ -147,6 +159,5 @@ final class PreferencesWindowController: NSWindowController {
         preferences.scrollMaxWidth = Double(maxWidthField.stringValue) ?? preferences.scrollMaxWidth
         preferences.scrollPauseAtEnds = Double(pauseField.stringValue) ?? preferences.scrollPauseAtEnds
         onSave(preferences)
-        window?.close()
     }
 }
