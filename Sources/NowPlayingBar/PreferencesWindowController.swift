@@ -33,8 +33,12 @@ final class PreferencesWindowController: NSWindowController {
 
         clientIDField.stringValue = preferences.clientID ?? ""
         clientIDField.placeholderString = "Spotify Client ID"
+        clientIDField.usesSingleLineMode = true
+        clientIDField.lineBreakMode = .byClipping
+        (clientIDField.cell as? NSTextFieldCell)?.wraps = false
+        (clientIDField.cell as? NSTextFieldCell)?.isScrollable = true
         clientIDField.translatesAutoresizingMaskIntoConstraints = false
-        clientIDField.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        clientIDField.widthAnchor.constraint(equalToConstant: 240).isActive = true
 
         Self.intervals.forEach { intervalPopup.addItem(withTitle: "\(Int($0))s") }
         if let index = Self.intervals.firstIndex(of: preferences.refreshInterval) {
