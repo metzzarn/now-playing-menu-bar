@@ -2,107 +2,212 @@ import AppKit
 import NowPlayingCore
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate {
     private var statusItem: NSStatusItem!
     private let menuBuilder = MenuBarController()
-    private let config: SpotifyConfig
-    private let auth: SpotifyAuth
-    private var client: SpotifyClient!
-    private var timer: Timer?
-    private var state: DisplayState = .loggedOut
+    private let nowPlayingView = NowPlayingView()
+    private let artworkLoader = ArtworkLoader()
+
+    private var preferences = Preferences()
+    private var config: SpotifyConfig?
+    private var auth: SpotifyAuth?
+    private var client: SpotifyClient?
+    private var prefsController: PreferencesWindowController?
+
+    private var playback: PlaybackState?
+    private var currentArtwork: NSImage?
+    private var localProgressMs = 0
+    private var loggedIn = false
+
+    private var pollTimer: Timer?
+    private var interpolationTimer: Timer?
     private var isTicking = false
     private var isAuthenticating = false
 
     override init() {
-        guard let clientID = ProcessInfo.processInfo.environment["SPOTIFY_CLIENT_ID"],
-              !clientID.isEmpty else {
-            fatalError("Set the SPOTIFY_CLIENT_ID environment variable before launching.")
-        }
-        self.config = SpotifyConfig(clientID: clientID)
-        self.auth = SpotifyAuth(config: config)
         super.init()
-        self.client = SpotifyClient(http: URLSession.shared) { [auth] in
-            try await auth.validAccessToken()
-        }
+        rebuildClient()
+        nowPlayingView.delegate = self
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        applyState(.loggedOut)
+        configureButtonAction()
+        startInterpolationTimer()
+        updateTitle()
 
         Task {
-            if await auth.isLoggedIn {
+            await refreshLoginState()
+            updateTitle()
+            if loggedIn {
                 startPolling()
                 await tick()
             }
         }
     }
 
-    // MARK: - Polling
+    // MARK: - Client construction
+
+    private func rebuildClient() {
+        guard let clientID = ClientIDResolver.resolve(
+            preferences: preferences,
+            environment: ProcessInfo.processInfo.environment) else {
+            config = nil; auth = nil; client = nil
+            return
+        }
+        let config = SpotifyConfig(clientID: clientID)
+        self.config = config
+        let auth = SpotifyAuth(config: config)
+        self.auth = auth
+        self.client = SpotifyClient(http: URLSession.shared) { [auth] in
+            try await auth.validAccessToken()
+        }
+    }
+
+    private func refreshLoginState() async {
+        guard let auth, let config else { loggedIn = false; return }
+        let hasSession = await auth.isLoggedIn
+        let reauth = ScopeCheck.needsReauth(
+            granted: preferences.grantedScope, required: config.scope)
+        loggedIn = hasSession && !reauth
+    }
+
+    // MARK: - Click routing
+
+    private func configureButtonAction() {
+        guard let button = statusItem.button else { return }
+        button.target = self
+        button.action = #selector(statusItemClicked)
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+    }
+
+    @objc private func statusItemClicked() {
+        guard let button = statusItem.button else { return }
+        let isRight = NSApp.currentEvent?.type == .rightMouseUp
+        let showRich = !isRight && loggedIn && playback != nil
+
+        let menu: NSMenu
+        if showRich {
+            menu = menuBuilder.richMenu(
+                contentView: nowPlayingView, target: self,
+                prefsAction: #selector(openPreferences), quitAction: #selector(quit))
+        } else {
+            menu = menuBuilder.simpleMenu(
+                isLoggedIn: loggedIn, hasClientID: config != nil, target: self,
+                loginAction: #selector(toggleAuth),
+                prefsAction: #selector(openPreferences), quitAction: #selector(quit))
+        }
+        menu.popUp(positioning: nil,
+                   at: NSPoint(x: 0, y: button.bounds.height + 5), in: button)
+    }
+
+    // MARK: - Polling & interpolation
 
     private func startPolling() {
-        guard timer == nil else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
-            Task { await self?.tick() }
+        stopPolling()
+        let timer = Timer(timeInterval: preferences.refreshInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor in await self?.tick() }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        pollTimer = timer
     }
 
     private func stopPolling() {
-        timer?.invalidate()
-        timer = nil
+        pollTimer?.invalidate()
+        pollTimer = nil
+    }
+
+    private func startInterpolationTimer() {
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.interpolate() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        interpolationTimer = timer
+    }
+
+    private func interpolate() {
+        guard let playback, playback.isPlaying else { return }
+        localProgressMs = min(localProgressMs + 1000, playback.durationMs)
+        nowPlayingView.updateProgress(ms: localProgressMs)
     }
 
     private func tick() async {
-        guard !isTicking else { return }
+        guard !isTicking, let client, let auth else { return }
         isTicking = true
         defer { isTicking = false }
 
-        guard await auth.isLoggedIn else { applyState(.loggedOut); return }
+        await refreshLoginState()
+        guard loggedIn else { updateTitle(); return }
         do {
-            try await updateNowPlaying()
+            try await updatePlayback(client)
         } catch SpotifyClientError.unauthorized {
             do {
                 _ = try await auth.refresh()
-                try await updateNowPlaying()
+                try await updatePlayback(client)
             } catch {
-                applyState(.loggedOut)
+                loggedIn = false
+                playback = nil
+                updateTitle()
             }
         } catch {
-            // Network hiccup: keep the last shown title, retry next tick.
+            // Network hiccup: keep the last shown state, retry next tick.
         }
     }
 
-    private func updateNowPlaying() async throws {
-        if let np = try await client.currentlyPlaying() {
-            applyState(.playing(np))
+    private func updatePlayback(_ client: SpotifyClient) async throws {
+        if let state = try await client.playbackState() {
+            applyPlayback(state)
         } else {
-            applyState(.idle)
+            playback = nil
+            currentArtwork = nil
+            nowPlayingView.showNothingPlaying()
+            updateTitle()
         }
     }
 
-    // MARK: - Display
+    private func applyPlayback(_ state: PlaybackState) {
+        let trackChanged = playback?.artworkURL != state.artworkURL
+        playback = state
+        localProgressMs = state.progressMs
+        if trackChanged { currentArtwork = nil }
+        updateTitle()
+        nowPlayingView.update(state: state, artwork: currentArtwork)
 
-    private func applyState(_ newState: DisplayState) {
-        state = newState
-        let loggedIn = newState != .loggedOut
-        let title = TitleFormatter.title(for: newState)
-        statusItem.button?.title = title
-        statusItem.menu = menuBuilder.buildMenu(
-            isLoggedIn: loggedIn,
-            nowPlayingTitle: title,
-            target: self,
-            authAction: #selector(toggleAuth),
-            quitAction: #selector(quit))
+        if trackChanged, let url = state.artworkURL {
+            Task {
+                let image = await artworkLoader.image(for: url)
+                guard playback?.artworkURL == url else { return }
+                currentArtwork = image
+                if let playback { nowPlayingView.update(state: playback, artwork: image) }
+            }
+        }
+    }
+
+    private func updateTitle() {
+        let display: DisplayState
+        if !loggedIn {
+            display = .loggedOut
+        } else if let playback {
+            display = .playing(NowPlaying(artist: playback.artist, track: playback.track))
+        } else {
+            display = .idle
+        }
+        statusItem.button?.title = TitleFormatter.title(for: display)
     }
 
     // MARK: - Auth
 
     @objc private func toggleAuth() {
         Task {
+            guard let auth else { return }
             if await auth.isLoggedIn {
                 await auth.logout()
+                preferences.grantedScope = nil
+                loggedIn = false
+                playback = nil
+                currentArtwork = nil
                 stopPolling()
-                applyState(.loggedOut)
+                updateTitle()
             } else {
                 await login()
             }
@@ -110,7 +215,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func login() async {
-        guard !isAuthenticating else { return }
+        guard !isAuthenticating, let auth, let config else { return }
         isAuthenticating = true
         defer { isAuthenticating = false }
 
@@ -122,20 +227,92 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         do {
             let callback = try await server.waitForCode()
             guard callback.state == stateParam else {
-                applyState(.loggedOut)
+                applyLoggedOut()
                 return
             }
             try await auth.exchange(code: callback.code, verifier: pkce.verifier)
+            preferences.grantedScope = config.scope
+            loggedIn = true
             startPolling()
             await tick()
         } catch {
             server.stop()
-            applyState(.loggedOut)
+            applyLoggedOut()
         }
+    }
+
+    private func applyLoggedOut() {
+        loggedIn = false
+        playback = nil
+        currentArtwork = nil
+        stopPolling()
+        updateTitle()
+    }
+
+    // MARK: - Preferences
+
+    @objc private func openPreferences() {
+        if prefsController == nil {
+            prefsController = PreferencesWindowController(preferences: preferences) { [weak self] updated in
+                guard let self else { return }
+                self.preferences = updated
+                self.rebuildClient()
+                Task {
+                    await self.refreshLoginState()
+                    if self.loggedIn {
+                        self.startPolling()
+                        await self.tick()
+                    } else {
+                        self.stopPolling()
+                    }
+                    self.updateTitle()
+                }
+            }
+        }
+        prefsController?.show()
+    }
+
+    // MARK: - Transport (NowPlayingViewDelegate)
+
+    func didTapPlayPause() {
+        guard let client, let current = playback else { return }
+        let optimistic = withPlaying(current, !current.isPlaying)
+        playback = optimistic
+        nowPlayingView.update(state: optimistic, artwork: currentArtwork)
+        Task {
+            do {
+                if optimistic.isPlaying { try await client.play() } else { try await client.pause() }
+            } catch {
+                playback = current
+                nowPlayingView.update(state: current, artwork: currentArtwork)
+            }
+        }
+    }
+
+    func didTapNext() { transport { try await $0.next() } }
+    func didTapPrevious() { transport { try await $0.previous() } }
+
+    private func transport(_ action: @escaping (SpotifyClient) async throws -> Void) {
+        guard let client else { return }
+        Task {
+            do {
+                try await action(client)
+                await tick()
+            } catch {
+                // Control failed (e.g. no active device): next poll reconciles.
+            }
+        }
+    }
+
+    private func withPlaying(_ state: PlaybackState, _ isPlaying: Bool) -> PlaybackState {
+        PlaybackState(track: state.track, artist: state.artist, album: state.album,
+                      artworkURL: state.artworkURL, isPlaying: isPlaying,
+                      progressMs: localProgressMs, durationMs: state.durationMs)
     }
 
     @objc private func quit() {
         stopPolling()
+        interpolationTimer?.invalidate()
         NSApplication.shared.terminate(nil)
     }
 }
