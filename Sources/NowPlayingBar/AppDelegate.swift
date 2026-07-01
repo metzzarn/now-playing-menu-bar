@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
 
     private var playback: PlaybackState?
     private var currentArtwork: NSImage?
+    private var artworkRequestID = 0
     private var localProgressMs = 0
     private var loggedIn = false
 
@@ -174,9 +175,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         nowPlayingView.update(state: state, artwork: currentArtwork)
 
         if trackChanged, let url = state.artworkURL {
+            artworkRequestID += 1
+            let requestID = artworkRequestID
             Task {
                 let image = await artworkLoader.image(for: url)
-                guard playback?.artworkURL == url else { return }
+                guard requestID == artworkRequestID else { return }
                 currentArtwork = image
                 if let playback { nowPlayingView.update(state: playback, artwork: image) }
             }
@@ -231,6 +234,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 return
             }
             try await auth.exchange(code: callback.code, verifier: pkce.verifier)
+            guard self.config?.clientID == config.clientID else {
+                // Client ID was changed in Preferences mid-login; this flow is stale.
+                return
+            }
             preferences.grantedScope = config.scope
             loggedIn = true
             startPolling()
@@ -252,24 +259,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     // MARK: - Preferences
 
     @objc private func openPreferences() {
-        if prefsController == nil {
-            prefsController = PreferencesWindowController(preferences: preferences) { [weak self] updated in
-                guard let self else { return }
-                self.preferences = updated
-                self.rebuildClient()
-                Task {
-                    await self.refreshLoginState()
-                    if self.loggedIn {
-                        self.startPolling()
-                        await self.tick()
-                    } else {
-                        self.stopPolling()
-                    }
-                    self.updateTitle()
+        // Recreate each time so the window reflects the current, latest preferences.
+        let controller = PreferencesWindowController(preferences: preferences) { [weak self] updated in
+            guard let self else { return }
+            self.preferences = updated
+            self.rebuildClient()
+            Task {
+                await self.refreshLoginState()
+                if self.loggedIn {
+                    self.startPolling()
+                    await self.tick()
+                } else {
+                    self.stopPolling()
                 }
+                self.updateTitle()
             }
         }
-        prefsController?.show()
+        prefsController = controller
+        controller.show()
     }
 
     // MARK: - Transport (NowPlayingViewDelegate)
@@ -283,8 +290,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
             do {
                 if optimistic.isPlaying { try await client.play() } else { try await client.pause() }
             } catch {
-                playback = current
-                nowPlayingView.update(state: current, artwork: currentArtwork)
+                // Only revert if no newer state (e.g. a poll tick) landed meanwhile.
+                if playback == optimistic {
+                    playback = current
+                    nowPlayingView.update(state: current, artwork: currentArtwork)
+                }
             }
         }
     }
