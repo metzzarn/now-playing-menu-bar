@@ -24,10 +24,11 @@ final class PreferencesWindowController: NSWindowController {
         self.preferences = preferences
         self.onSave = onSave
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320),
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 400),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered, defer: false)
         window.title = "Preferences"
+        window.contentMinSize = NSSize(width: 420, height: 380)
         super.init(window: window)
         buildUI()
     }

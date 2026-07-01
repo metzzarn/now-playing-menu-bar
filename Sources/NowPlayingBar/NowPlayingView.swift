@@ -12,7 +12,7 @@ protocol NowPlayingViewDelegate: AnyObject {
 final class NowPlayingView: NSView {
     weak var delegate: NowPlayingViewDelegate?
 
-    private let artworkView = NSImageView()
+    private let artworkView = NSButton()
     private let trackLabel = NowPlayingView.makeLabel(bold: true)
     private let artistLabel = NowPlayingView.makeLabel(bold: false)
     private let albumLabel = NowPlayingView.makeLabel(bold: false)
@@ -69,15 +69,19 @@ final class NowPlayingView: NSView {
     // MARK: - Setup
 
     private func setup() {
+        artworkView.isBordered = false
+        artworkView.bezelStyle = .regularSquare
+        artworkView.setButtonType(.momentaryChange)
+        artworkView.imagePosition = .imageOnly
         artworkView.imageScaling = .scaleProportionallyUpOrDown
+        artworkView.image = Self.placeholder
+        artworkView.target = self
+        artworkView.action = #selector(artworkTapped)
         artworkView.wantsLayer = true
         artworkView.layer?.cornerRadius = 6
         artworkView.layer?.masksToBounds = true
-        artworkView.image = Self.placeholder
         artworkView.translatesAutoresizingMaskIntoConstraints = false
         artworkView.widthAnchor.constraint(equalTo: artworkView.heightAnchor).isActive = true
-        artworkView.addGestureRecognizer(
-            NSClickGestureRecognizer(target: self, action: #selector(artworkTapped)))
 
         artworkView.setContentHuggingPriority(.required, for: .horizontal)
 
