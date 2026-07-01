@@ -32,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        installMainMenu()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         configureButtonAction()
         startInterpolationTimer()
@@ -45,6 +46,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 await tick()
             }
         }
+    }
+
+    // MARK: - Main menu (enables Cmd+C/V/X/A in text fields for an accessory app)
+
+    private func installMainMenu() {
+        let mainMenu = NSMenu()
+
+        let appItem = NSMenuItem()
+        mainMenu.addItem(appItem)
+        let appMenu = NSMenu()
+        let quitItem = appMenu.addItem(withTitle: "Quit", action: #selector(quit), keyEquivalent: "q")
+        quitItem.target = self
+        appItem.submenu = appMenu
+
+        let editItem = NSMenuItem()
+        mainMenu.addItem(editItem)
+        let editMenu = NSMenu(title: "Edit")
+        editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editItem.submenu = editMenu
+
+        NSApp.mainMenu = mainMenu
     }
 
     // MARK: - Client construction
