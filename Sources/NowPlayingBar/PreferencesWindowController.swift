@@ -106,12 +106,15 @@ final class PreferencesWindowController: NSWindowController {
         let saveRow = NSStackView(views: [NSView(), saveButton])
         saveRow.orientation = .horizontal
 
+        let scrollDivider = divider()
+
         let stack = NSStackView(views: [
             labeledRow("Client ID:", clientIDField),
             labeledRow("Refresh:", intervalPopup),
             sectionLabel("Menu Bar"),
             progressEnabledButton,
             barRow,
+            scrollDivider,
             scrollEnabledButton,
             scrollRow,
             labeledRow("Max width (pt):", maxWidthField),
@@ -130,6 +133,7 @@ final class PreferencesWindowController: NSWindowController {
             stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
             stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
             saveRow.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
+            scrollDivider.trailingAnchor.constraint(equalTo: stack.trailingAnchor),
         ])
     }
 
@@ -145,6 +149,13 @@ final class PreferencesWindowController: NSWindowController {
         row.orientation = .horizontal
         row.spacing = 8
         return row
+    }
+
+    private func divider() -> NSView {
+        let box = NSBox()
+        box.boxType = .separator
+        box.translatesAutoresizingMaskIntoConstraints = false
+        return box
     }
 
     private func sectionLabel(_ title: String) -> NSView {
