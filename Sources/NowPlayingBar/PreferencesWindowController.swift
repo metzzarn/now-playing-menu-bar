@@ -50,6 +50,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             backing: .buffered, defer: false)
         window.title = "Preferences"
         window.contentMinSize = NSSize(width: 460, height: 580)
+        window.level = .floating
         super.init(window: window)
         buildUI()
     }
@@ -299,6 +300,14 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let text = preferences.appTextColorHex.flatMap(NSColor.fromHex) ?? .labelColor
         content.wantsLayer = true
         content.layer?.backgroundColor = background.cgColor
+
+        // Match the window's appearance to the background so native controls
+        // (tabs, popups, checkboxes) stay legible on a light or dark background.
+        let srgb = background.usingColorSpace(.sRGB) ?? background
+        let luminance = 0.299 * srgb.redComponent + 0.587 * srgb.greenComponent
+            + 0.114 * srgb.blueComponent
+        window?.appearance = NSAppearance(named: luminance > 0.5 ? .aqua : .darkAqua)
+
         applyTextColor(text, to: content)
         // Non-selected tabs aren't in the view hierarchy, so recolor each tab's view.
         for item in tabView.tabViewItems {
