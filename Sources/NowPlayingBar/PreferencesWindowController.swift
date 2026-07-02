@@ -176,15 +176,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         thicknessRow.orientation = .horizontal
         thicknessRow.spacing = 6
 
-        let barRow = NSStackView(views: [
-            labeledRow("Bar thickness:", thicknessRow),
-            labeledRow("Bar color:", colorWell),
-        ])
-        barRow.orientation = .horizontal
-        barRow.spacing = 20
-
-        let barBackgroundRow = labeledRow("Bar background color:", barBackgroundWell)
-
         let scrollRow = NSStackView(views: [
             labeledRow("Scroll speed (pt/s):", speedField),
             labeledRow("End pause (s):", pauseField),
@@ -202,8 +193,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             labeledRow("Text alignment:", alignmentPopup),
             divider(),
             progressEnabledButton,
-            barRow,
-            barBackgroundRow,
+            labeledRow("Bar thickness:", thicknessRow),
             divider(),
             scrollEnabledButton,
             scrollRow,
@@ -219,6 +209,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             labeledRow("Background color:", appBackgroundWell),
             labeledRow("Text color:", appTextWell),
             labeledRow("Menu bar text color:", menuBarTextWell),
+            divider(),
+            labeledRow("Progress bar color:", colorWell),
+            labeledRow("Progress bar background:", barBackgroundWell),
         ])
     }
 
