@@ -371,15 +371,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     func didSeek(toFraction fraction: Double) {
         guard let client, let playback, playback.durationMs > 0 else { return }
         let ms = Int(fraction * Double(playback.durationMs))
-        localProgressMs = ms  // optimistic; interpolation continues from here
+        // Assume the released position is correct: keep local progress there and
+        // let interpolation continue. No immediate re-poll (Spotify can report
+        // stale progress for ~1s after a seek and would snap the bar back).
+        localProgressMs = ms
+        self.playback = withPlaying(playback, playback.isPlaying)
         nowPlayingView.updateProgress(ms: ms)
         Task {
-            do {
-                try await client.seek(toMs: ms)
-                await tick()
-            } catch {
-                // Seek failed (e.g. no active device): next poll reconciles.
-            }
+            try? await client.seek(toMs: ms)
         }
     }
 

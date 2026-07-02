@@ -10,11 +10,10 @@ final class SeekBar: NSSlider {
 
     convenience init() {
         self.init(frame: .zero)
+        cell = SeekSliderCell()
         minValue = 0
         maxValue = 1
         isContinuous = true
-        sliderType = .linear
-        controlSize = .small
         target = self
         action = #selector(sliderChanged)
         translatesAutoresizingMaskIntoConstraints = false
@@ -32,5 +31,33 @@ final class SeekBar: NSSlider {
         } else {
             onScrubChanged?(fraction)
         }
+    }
+}
+
+/// Custom-drawn so the filled portion is always the accent color (the stock
+/// slider draws it gray until the app is active) and the knob is smaller.
+private final class SeekSliderCell: NSSliderCell {
+    override func drawBar(inside rect: NSRect, flipped: Bool) {
+        let radius = rect.height / 2
+        NSColor.quaternaryLabelColor.setFill()
+        NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
+
+        let range = maxValue - minValue
+        let fraction = range > 0 ? (doubleValue - minValue) / range : 0
+        var fill = rect
+        fill.size.width = rect.width * CGFloat(max(0, min(1, fraction)))
+        NSColor.controlAccentColor.setFill()
+        NSBezierPath(roundedRect: fill, xRadius: radius, yRadius: radius).fill()
+    }
+
+    override func drawKnob(_ knobRect: NSRect) {
+        let diameter: CGFloat = 11
+        let box = NSRect(x: knobRect.midX - diameter / 2, y: knobRect.midY - diameter / 2,
+                         width: diameter, height: diameter)
+        let path = NSBezierPath(ovalIn: box)
+        NSColor.white.setFill()
+        path.fill()
+        NSColor.black.withAlphaComponent(0.15).setStroke()
+        path.stroke()
     }
 }
