@@ -44,11 +44,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         self.preferences = preferences
         self.onSave = onSave
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 540),
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 600),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered, defer: false)
         window.title = "Preferences"
-        window.contentMinSize = NSSize(width: 460, height: 520)
+        window.contentMinSize = NSSize(width: 460, height: 580)
         super.init(window: window)
         buildUI()
     }
