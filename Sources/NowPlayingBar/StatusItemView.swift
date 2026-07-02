@@ -14,6 +14,7 @@ final class StatusItemView: NSView {
 
     private var textWidth: CGFloat = 0
     private var hasTrack = false
+    private var forceWhiteText = false
     private var scrollStart = Date()
     private var marqueeTimer: Timer?
 
@@ -33,11 +34,13 @@ final class StatusItemView: NSView {
 
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
-    func update(text: String, progress: Double?, hasTrack: Bool, style: MenuBarStyle) {
+    func update(text: String, progress: Double?, hasTrack: Bool, forceWhiteText: Bool,
+                style: MenuBarStyle) {
         let textChanged = text != self.text
         self.text = text
         self.progress = progress
         self.hasTrack = hasTrack
+        self.forceWhiteText = forceWhiteText
         self.style = style
         self.textWidth = (text as NSString).size(withAttributes: [.font: font]).width
         if textChanged { scrollStart = Date() }
@@ -71,7 +74,9 @@ final class StatusItemView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         NSBezierPath(rect: bounds).addClip()
 
-        let titleColor = style.textColorHex.flatMap(NSColor.fromHex) ?? .labelColor
+        let titleColor = forceWhiteText
+            ? .white
+            : (style.textColorHex.flatMap(NSColor.fromHex) ?? .labelColor)
         let attrs: [NSAttributedString.Key: Any] = [
             .font: font, .foregroundColor: titleColor,
         ]

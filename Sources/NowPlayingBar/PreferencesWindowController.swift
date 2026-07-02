@@ -317,6 +317,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
                     item.attributedTitle = NSAttributedString(
                         string: item.title, attributes: [.foregroundColor: color])
                 }
+            } else if let button = subview as? NSButton, button !== saveButton {
+                // Checkbox toggle labels.
+                button.attributedTitle = NSAttributedString(
+                    string: button.title, attributes: [.foregroundColor: color])
             }
             applyTextColor(color, to: subview)
         }

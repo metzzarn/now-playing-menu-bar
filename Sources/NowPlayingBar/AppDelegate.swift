@@ -225,6 +225,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         let text: String
         let progress: Double?
         var hasTrack = false
+        var forceWhiteText = false
         if !loggedIn {
             text = "Login"
             progress = nil
@@ -240,11 +241,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 ? Double(localProgressMs) / Double(playback.durationMs) : nil
             hasTrack = true
         } else {
-            text = "♪"
+            text = "♪"  // idle glyph: always white, independent of the text-color setting
             progress = nil
+            forceWhiteText = true
         }
         statusView.update(text: text, progress: progress, hasTrack: hasTrack,
-                          style: preferences.menuBarStyle)
+                          forceWhiteText: forceWhiteText, style: preferences.menuBarStyle)
         let width = statusView.desiredWidth
         if statusItem.length != width { statusItem.length = width }
     }
