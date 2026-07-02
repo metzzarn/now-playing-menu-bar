@@ -205,10 +205,12 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         thicknessRow.spacing = 6
 
         return tabContainer([
+            sectionLabel("Colors"),
             labeledRow("Background color:", appBackgroundWell),
             labeledRow("Text color:", appTextWell),
             labeledRow("Menu bar text color:", menuBarTextWell),
             divider(),
+            sectionLabel("Progress Bar"),
             labeledRow("Bar thickness:", thicknessRow),
             labeledRow("Progress bar color:", colorWell),
             labeledRow("Progress bar background:", barBackgroundWell),
@@ -294,6 +296,12 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         box.boxType = .separator
         box.translatesAutoresizingMaskIntoConstraints = false
         return box
+    }
+
+    private func sectionLabel(_ title: String) -> NSView {
+        let label = NSTextField(labelWithString: title)
+        label.font = .boldSystemFont(ofSize: 12)
+        return label
     }
 
     private func tab(_ label: String, view: NSView) -> NSTabViewItem {
