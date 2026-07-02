@@ -172,10 +172,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func menuBarTab() -> NSView {
-        let thicknessRow = NSStackView(views: [thicknessStepper, thicknessLabel])
-        thicknessRow.orientation = .horizontal
-        thicknessRow.spacing = 6
-
         let scrollRow = NSStackView(views: [
             labeledRow("Scroll speed (pt/s):", speedField),
             labeledRow("End pause (s):", pauseField),
@@ -193,7 +189,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             labeledRow("Text alignment:", alignmentPopup),
             divider(),
             progressEnabledButton,
-            labeledRow("Bar thickness:", thicknessRow),
             divider(),
             scrollEnabledButton,
             scrollRow,
@@ -205,11 +200,16 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func styleTab() -> NSView {
-        tabContainer([
+        let thicknessRow = NSStackView(views: [thicknessStepper, thicknessLabel])
+        thicknessRow.orientation = .horizontal
+        thicknessRow.spacing = 6
+
+        return tabContainer([
             labeledRow("Background color:", appBackgroundWell),
             labeledRow("Text color:", appTextWell),
             labeledRow("Menu bar text color:", menuBarTextWell),
             divider(),
+            labeledRow("Bar thickness:", thicknessRow),
             labeledRow("Progress bar color:", colorWell),
             labeledRow("Progress bar background:", barBackgroundWell),
         ])
