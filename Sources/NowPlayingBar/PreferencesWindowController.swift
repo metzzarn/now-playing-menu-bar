@@ -8,6 +8,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let intervalPopup = NSPopUpButton()
     private let formatField = NSTextField()
     private let formatErrorLabel = NSTextField(labelWithString: "")
+    private let variablesHint = NSTextField(
+        labelWithString: "Variables: <title> <artist> <artists> <album> <year>")
     private let saveButton = NSButton(title: "Save", target: nil, action: nil)
     private static let intervals: [TimeInterval] = [1, 3, 5, 10]
 
@@ -190,8 +192,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scrollRow.orientation = .horizontal
         scrollRow.spacing = 20
 
-        let variablesHint = NSTextField(
-            labelWithString: "Variables: <title> <artist> <artists> <album> <year>")
         variablesHint.font = .systemFont(ofSize: 10)
         variablesHint.textColor = .secondaryLabelColor
 
@@ -249,7 +249,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func applyTextColor(_ color: NSColor, to view: NSView) {
         for subview in view.subviews {
             if let label = subview as? NSTextField,
-               !label.isEditable, !label.isBezeled, subview !== formatErrorLabel {
+               !label.isEditable, !label.isBezeled,
+               subview !== formatErrorLabel, subview !== variablesHint,
+               subview !== thicknessLabel {
                 label.textColor = color
             }
             applyTextColor(color, to: subview)

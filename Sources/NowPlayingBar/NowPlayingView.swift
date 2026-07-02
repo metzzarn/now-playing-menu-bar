@@ -11,6 +11,7 @@ protocol NowPlayingViewDelegate: AnyObject {
 
 final class NowPlayingView: NSView {
     weak var delegate: NowPlayingViewDelegate?
+    private var backgroundColorValue: NSColor = .windowBackgroundColor
 
     private let artworkView = NSButton()
     private let trackLabel = NowPlayingView.makeLabel(bold: true)
@@ -56,13 +57,25 @@ final class NowPlayingView: NSView {
     }
 
     func setColors(background: NSColor, text: NSColor) {
-        wantsLayer = true
-        layer?.backgroundColor = background.cgColor
+        backgroundColorValue = background
+        applyLayerBackground()
         trackLabel.textColor = text
         artistLabel.textColor = text.withAlphaComponent(0.7)
         albumLabel.textColor = text.withAlphaComponent(0.7)
         positionLabel.textColor = text.withAlphaComponent(0.7)
         lengthLabel.textColor = text.withAlphaComponent(0.7)
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applyLayerBackground()  // re-resolve dynamic system colors for the layer
+    }
+
+    private func applyLayerBackground() {
+        wantsLayer = true
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = backgroundColorValue.cgColor
+        }
     }
 
     func showNothingPlaying() {
