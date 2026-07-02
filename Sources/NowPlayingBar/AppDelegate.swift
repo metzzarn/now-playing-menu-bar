@@ -332,6 +332,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         if let controller = prefsController, controller.window?.isVisible == true {
             NSApp.activate(ignoringOtherApps: true)
             controller.window?.makeKeyAndOrderFront(nil)
+            showPreview()  // keep the preview visible and repositioned
             return
         }
         // Otherwise create fresh so it reflects the current, latest preferences.
