@@ -7,7 +7,8 @@ final class PreferencesTests: XCTestCase {
     }
 
     func testDefaultInterval() {
-        XCTAssertEqual(Preferences(store: makeStore()).refreshInterval, 3)
+        XCTAssertEqual(Preferences(store: makeStore()).refreshInterval,
+                       PreferenceDefaults.refreshInterval)
     }
 
     func testClientIDRoundTrips() {

@@ -8,13 +8,13 @@ final class MenuBarPreferencesTests: XCTestCase {
 
     func testDefaultsInMenuBarStyle() {
         let style = makePrefs().menuBarStyle
-        XCTAssertTrue(style.progressBarEnabled)
-        XCTAssertEqual(style.thickness, 2)
-        XCTAssertEqual(style.colorHex, "#1DB954FF")
-        XCTAssertTrue(style.scrollEnabled)
-        XCTAssertEqual(style.scrollSpeed, 20)
-        XCTAssertEqual(style.maxWidth, 200)
-        XCTAssertEqual(style.pauseAtEnds, 1)
+        XCTAssertEqual(style.progressBarEnabled, PreferenceDefaults.progressBarEnabled)
+        XCTAssertEqual(style.thickness, CGFloat(PreferenceDefaults.progressBarThickness))
+        XCTAssertEqual(style.colorHex, PreferenceDefaults.progressBarColorHex)
+        XCTAssertEqual(style.scrollEnabled, PreferenceDefaults.scrollEnabled)
+        XCTAssertEqual(style.scrollSpeed, CGFloat(PreferenceDefaults.scrollSpeed))
+        XCTAssertEqual(style.maxWidth, CGFloat(PreferenceDefaults.maxWidth))
+        XCTAssertEqual(style.pauseAtEnds, PreferenceDefaults.scrollPauseAtEnds)
     }
 
     func testRoundTrips() {
@@ -37,8 +37,8 @@ final class MenuBarPreferencesTests: XCTestCase {
     func testStaticWidthDefaultsAndRoundTrips() {
         var prefs = makePrefs()
         let style = prefs.menuBarStyle
-        XCTAssertFalse(style.useStaticWidth)
-        XCTAssertEqual(style.staticWidth, 150)
+        XCTAssertEqual(style.useStaticWidth, PreferenceDefaults.useStaticWidth)
+        XCTAssertEqual(style.staticWidth, CGFloat(PreferenceDefaults.staticWidth))
         XCTAssertEqual(style.widthCap, style.maxWidth)
 
         prefs.useStaticWidth = true
@@ -73,7 +73,7 @@ final class MenuBarPreferencesTests: XCTestCase {
 
     func testAlignmentDefaultsToLeftAndRoundTrips() {
         var prefs = makePrefs()
-        XCTAssertEqual(prefs.menuBarStyle.alignment, .left)
+        XCTAssertEqual(prefs.menuBarStyle.alignment, PreferenceDefaults.textAlignment)
         prefs.textAlignment = .center
         XCTAssertEqual(prefs.menuBarStyle.alignment, .center)
     }

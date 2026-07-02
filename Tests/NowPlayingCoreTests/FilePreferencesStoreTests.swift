@@ -29,7 +29,7 @@ final class FilePreferencesStoreTests: XCTestCase {
     func testMissingFileYieldsDefaults() {
         let prefs = Preferences(store: FilePreferencesStore(url: tempURL()))
         XCTAssertNil(prefs.clientID)
-        XCTAssertEqual(prefs.refreshInterval, 3)
+        XCTAssertEqual(prefs.refreshInterval, PreferenceDefaults.refreshInterval)
         XCTAssertEqual(prefs.trackTemplate, Preferences.defaultTrackTemplate)
     }
 }
