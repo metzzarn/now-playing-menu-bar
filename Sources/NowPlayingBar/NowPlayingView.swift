@@ -122,8 +122,6 @@ final class NowPlayingView: NSView {
         labels.alignment = .leading
         labels.spacing = 2
 
-        seekBar.translatesAutoresizingMaskIntoConstraints = false
-        seekBar.heightAnchor.constraint(equalToConstant: 12).isActive = true
         seekBar.onScrubChanged = { [weak self] fraction in
             guard let self else { return }
             self.isScrubbing = true
