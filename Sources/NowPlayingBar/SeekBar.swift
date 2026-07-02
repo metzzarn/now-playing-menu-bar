@@ -29,6 +29,11 @@ final class SeekBar: NSSlider {
         needsDisplay = true
     }
 
+    func setTrackColor(_ color: NSColor) {
+        (cell as? SeekSliderCell)?.trackColor = color
+        needsDisplay = true
+    }
+
     @objc private func sliderChanged() {
         let fraction = doubleValue
         if NSApp.currentEvent?.type == .leftMouseUp {
@@ -43,10 +48,11 @@ final class SeekBar: NSSlider {
 /// slider draws it gray until the app is active) and the knob is smaller.
 private final class SeekSliderCell: NSSliderCell {
     var knobColor: NSColor = .white
+    var trackColor: NSColor = .quaternaryLabelColor
 
     override func drawBar(inside rect: NSRect, flipped: Bool) {
         let radius = rect.height / 2
-        NSColor.quaternaryLabelColor.setFill()
+        trackColor.setFill()
         NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
 
         let range = maxValue - minValue

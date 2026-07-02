@@ -36,7 +36,7 @@ public struct Theme: Equatable {
         progressBarColor: "#0A84FFFF", progressBarBackground: "#3A3A3AFF")
 
     public static let light = Theme(
-        name: "Light", background: "#FFFFFFFF", text: "#000000FF", menuBarText: "#000000FF",
+        name: "Light", background: "#FFFFFFFF", text: "#000000FF", menuBarText: "#FFFFFFFF",
         progressBarColor: "#0A84FFFF", progressBarBackground: "#D0D0D0FF")
 
     public static let midnight = Theme(
