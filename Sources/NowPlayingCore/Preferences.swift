@@ -81,7 +81,7 @@ public struct Preferences {
     }
 
     public var scrollMaxWidth: Double {
-        get { store.double(forKey: Key.scrollMaxWidth) ?? 150 }
+        get { store.double(forKey: Key.scrollMaxWidth) ?? 200 }
         set { store.setDouble(newValue, forKey: Key.scrollMaxWidth) }
     }
 

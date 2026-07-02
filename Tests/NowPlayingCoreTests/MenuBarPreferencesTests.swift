@@ -13,7 +13,7 @@ final class MenuBarPreferencesTests: XCTestCase {
         XCTAssertEqual(style.colorHex, "#1DB954FF")
         XCTAssertTrue(style.scrollEnabled)
         XCTAssertEqual(style.scrollSpeed, 20)
-        XCTAssertEqual(style.maxWidth, 150)
+        XCTAssertEqual(style.maxWidth, 200)
         XCTAssertEqual(style.pauseAtEnds, 1)
     }
 
