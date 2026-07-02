@@ -126,6 +126,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         colorWell.heightAnchor.constraint(equalToConstant: 24).isActive = true
 
         scrollEnabledButton.state = preferences.scrollEnabled ? .on : .off
+        scrollEnabledButton.target = self
+        scrollEnabledButton.action = #selector(scrollModeChanged)
         useStaticWidthButton.state = preferences.useStaticWidth ? .on : .off
         useStaticWidthButton.target = self
         useStaticWidthButton.action = #selector(widthModeChanged)
@@ -159,6 +161,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
                            systemColor: .labelColor)
 
         updateWidthFieldStates()
+        updateScrollFieldStates()
         updateFormatValidation()
     }
 
@@ -184,9 +187,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         return tabContainer([
             labeledRow("Format:", formatField),
+            labeledRow("Text alignment:", alignmentPopup),
             variablesHint,
             formatErrorLabel,
-            labeledRow("Text alignment:", alignmentPopup),
             divider(),
             progressEnabledButton,
             divider(),
@@ -333,6 +336,16 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let staticOn = useStaticWidthButton.state == .on
         staticWidthField.isEnabled = staticOn
         maxWidthField.isEnabled = !staticOn
+    }
+
+    @objc private func scrollModeChanged() {
+        updateScrollFieldStates()
+    }
+
+    private func updateScrollFieldStates() {
+        let on = scrollEnabledButton.state == .on
+        speedField.isEnabled = on
+        pauseField.isEnabled = on
     }
 
     @objc private func save() {
