@@ -31,7 +31,14 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let appBackgroundWell = NSColorWell()
     private let appTextWell = NSColorWell()
     private let menuBarTextWell = NSColorWell()
-    private var touchedWells: Set<ObjectIdentifier> = []
+    private let themePopup = NSPopUpButton()
+
+    // Working color values; nil = system color. Persisted directly on Save.
+    private var workingBackground: String?
+    private var workingText: String?
+    private var workingMenuBarText: String?
+    private var workingBarColor = "#1DB954FF"
+    private var workingBarBackground: String?
 
     init(preferences: Preferences, onSave: @escaping (Preferences) -> Void) {
         self.preferences = preferences
@@ -120,10 +127,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         thicknessLabel.translatesAutoresizingMaskIntoConstraints = false
         thicknessLabel.widthAnchor.constraint(equalToConstant: 34).isActive = true
 
-        colorWell.color = NSColor.fromHex(preferences.progressBarColorHex) ?? .systemGreen
-        colorWell.translatesAutoresizingMaskIntoConstraints = false
-        colorWell.widthAnchor.constraint(equalToConstant: 44).isActive = true
-        colorWell.heightAnchor.constraint(equalToConstant: 24).isActive = true
 
         scrollEnabledButton.state = preferences.scrollEnabled ? .on : .off
         scrollEnabledButton.target = self
@@ -151,14 +154,25 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         formatErrorLabel.textColor = .systemRed
         formatErrorLabel.font = .systemFont(ofSize: 10)
 
-        configureColorWell(barBackgroundWell, hex: preferences.progressBarBackgroundColorHex,
+        workingBackground = preferences.appBackgroundColorHex
+        workingText = preferences.appTextColorHex
+        workingMenuBarText = preferences.menuBarTextColorHex
+        workingBarColor = preferences.progressBarColorHex
+        workingBarBackground = preferences.progressBarBackgroundColorHex
+
+        configureColorWell(colorWell, hex: workingBarColor, systemColor: .systemGreen)
+        configureColorWell(barBackgroundWell, hex: workingBarBackground,
                            systemColor: NSColor.labelColor.withAlphaComponent(0.2))
-        configureColorWell(appBackgroundWell, hex: preferences.appBackgroundColorHex,
+        configureColorWell(appBackgroundWell, hex: workingBackground,
                            systemColor: .windowBackgroundColor)
-        configureColorWell(appTextWell, hex: preferences.appTextColorHex,
-                           systemColor: .labelColor)
-        configureColorWell(menuBarTextWell, hex: preferences.menuBarTextColorHex,
-                           systemColor: .labelColor)
+        configureColorWell(appTextWell, hex: workingText, systemColor: .labelColor)
+        configureColorWell(menuBarTextWell, hex: workingMenuBarText, systemColor: .labelColor)
+
+        themePopup.addItem(withTitle: "Custom")
+        Theme.all.forEach { themePopup.addItem(withTitle: $0.name) }
+        themePopup.target = self
+        themePopup.action = #selector(themeChanged)
+        updateThemeSelection()
 
         updateWidthFieldStates()
         updateScrollFieldStates()
@@ -208,6 +222,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         thicknessRow.spacing = 6
 
         return tabContainer([
+            sectionLabel("Theme"),
+            labeledRow("Theme:", themePopup),
+            divider(),
             sectionLabel("Colors"),
             labeledRow("Background color:", appBackgroundWell),
             labeledRow("Text color:", appTextWell),
@@ -230,7 +247,48 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     @objc private func colorWellChanged(_ sender: NSColorWell) {
-        touchedWells.insert(ObjectIdentifier(sender))
+        let hex = sender.color.hexRGBA
+        switch sender {
+        case appBackgroundWell: workingBackground = hex
+        case appTextWell: workingText = hex
+        case menuBarTextWell: workingMenuBarText = hex
+        case colorWell: workingBarColor = hex
+        case barBackgroundWell: workingBarBackground = hex
+        default: break
+        }
+        updateThemeSelection()
+    }
+
+    @objc private func themeChanged() {
+        let title = themePopup.titleOfSelectedItem ?? "Custom"
+        guard let theme = Theme.all.first(where: { $0.name == title }) else { return }
+        applyTheme(theme)
+    }
+
+    private func applyTheme(_ theme: Theme) {
+        workingBackground = theme.background
+        workingText = theme.text
+        workingMenuBarText = theme.menuBarText
+        workingBarColor = theme.progressBarColor
+        workingBarBackground = theme.progressBarBackground
+
+        appBackgroundWell.color = colorOrSystem(theme.background, .windowBackgroundColor)
+        appTextWell.color = colorOrSystem(theme.text, .labelColor)
+        menuBarTextWell.color = colorOrSystem(theme.menuBarText, .labelColor)
+        colorWell.color = NSColor.fromHex(theme.progressBarColor) ?? .systemGreen
+        barBackgroundWell.color = colorOrSystem(theme.progressBarBackground,
+                                                NSColor.labelColor.withAlphaComponent(0.2))
+    }
+
+    private func colorOrSystem(_ hex: String?, _ system: NSColor) -> NSColor {
+        hex.flatMap(NSColor.fromHex) ?? system
+    }
+
+    private func updateThemeSelection() {
+        let match = Theme.matching(
+            background: workingBackground, text: workingText, menuBarText: workingMenuBarText,
+            progressBarColor: workingBarColor, progressBarBackground: workingBarBackground)
+        themePopup.selectItem(withTitle: match?.name ?? "Custom")
     }
 
     /// Applies the configured app colors to the Preferences window itself.
@@ -354,7 +412,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         preferences.refreshInterval = Self.intervals[intervalPopup.indexOfSelectedItem]
         preferences.progressBarEnabled = progressEnabledButton.state == .on
         preferences.progressBarThickness = thicknessStepper.doubleValue
-        preferences.progressBarColorHex = colorWell.color.hexRGBA
         preferences.scrollEnabled = scrollEnabledButton.state == .on
         preferences.scrollSpeed = Double(speedField.stringValue) ?? preferences.scrollSpeed
         preferences.useStaticWidth = useStaticWidthButton.state == .on
@@ -363,18 +420,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         preferences.scrollPauseAtEnds = Double(pauseField.stringValue) ?? preferences.scrollPauseAtEnds
         preferences.textAlignment = MenuBarTextAlignment.allCases[alignmentPopup.indexOfSelectedItem]
         preferences.trackTemplate = formatField.stringValue
-        if touchedWells.contains(ObjectIdentifier(barBackgroundWell)) {
-            preferences.progressBarBackgroundColorHex = barBackgroundWell.color.hexRGBA
-        }
-        if touchedWells.contains(ObjectIdentifier(appBackgroundWell)) {
-            preferences.appBackgroundColorHex = appBackgroundWell.color.hexRGBA
-        }
-        if touchedWells.contains(ObjectIdentifier(appTextWell)) {
-            preferences.appTextColorHex = appTextWell.color.hexRGBA
-        }
-        if touchedWells.contains(ObjectIdentifier(menuBarTextWell)) {
-            preferences.menuBarTextColorHex = menuBarTextWell.color.hexRGBA
-        }
+        preferences.appBackgroundColorHex = workingBackground
+        preferences.appTextColorHex = workingText
+        preferences.menuBarTextColorHex = workingMenuBarText
+        preferences.progressBarColorHex = workingBarColor
+        preferences.progressBarBackgroundColorHex = workingBarBackground
         onSave(preferences)
         applyWindowColors()
     }

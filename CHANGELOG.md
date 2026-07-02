@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.0] - 2026-07-02
+
+### Added
+- Theme presets on the Style tab: Default, Spotify, Dark, Light, Midnight, Solarized.
+  Picking one fills all the Style colors; editing a color shows "Custom". Default
+  restores the original system colors.
+
 ## [0.6.0] - 2026-07-02
 
 ### Added
