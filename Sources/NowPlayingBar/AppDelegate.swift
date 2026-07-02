@@ -318,7 +318,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     // MARK: - Preferences
 
     @objc private func openPreferences() {
-        // Recreate each time so the window reflects the current, latest preferences.
+        // Only one Preferences window at a time: front the existing one if open.
+        if let controller = prefsController, controller.window?.isVisible == true {
+            NSApp.activate(ignoringOtherApps: true)
+            controller.window?.makeKeyAndOrderFront(nil)
+            return
+        }
+        // Otherwise create fresh so it reflects the current, latest preferences.
         let controller = PreferencesWindowController(preferences: preferences) { [weak self] updated in
             guard let self else { return }
             self.preferences = updated

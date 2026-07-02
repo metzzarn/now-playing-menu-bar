@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.0] - 2026-07-02
+
+### Changed
+- Progress bar and title scrolling are now enabled by default.
+- Only one Preferences window can be open at a time (reopening fronts the existing one).
+- Removed the "Light" theme preset.
+
 ## [0.8.0] - 2026-07-02
 
 ### Changed

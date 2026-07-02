@@ -5,7 +5,7 @@ import Foundation
 public protocol PreferencesStore: AnyObject {
     func string(forKey key: String) -> String?
     func double(forKey key: String) -> Double?
-    func bool(forKey key: String) -> Bool
+    func bool(forKey key: String) -> Bool?
     func setString(_ value: String?, forKey key: String)
     func setDouble(_ value: Double, forKey key: String)
     func setBool(_ value: Bool, forKey key: String)
@@ -82,9 +82,9 @@ public final class FilePreferencesStore: PreferencesStore {
         return nil
     }
 
-    public func bool(forKey key: String) -> Bool {
+    public func bool(forKey key: String) -> Bool? {
         if case .bool(let value) = values[key] { return value }
-        return false
+        return nil
     }
 
     public func setString(_ value: String?, forKey key: String) {

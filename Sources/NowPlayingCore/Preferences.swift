@@ -46,7 +46,7 @@ public struct Preferences {
     // MARK: - Menu bar appearance
 
     public var progressBarEnabled: Bool {
-        get { store.bool(forKey: Key.progressBarEnabled) }
+        get { store.bool(forKey: Key.progressBarEnabled) ?? true }
         set { store.setBool(newValue, forKey: Key.progressBarEnabled) }
     }
 
@@ -61,7 +61,7 @@ public struct Preferences {
     }
 
     public var scrollEnabled: Bool {
-        get { store.bool(forKey: Key.scrollEnabled) }
+        get { store.bool(forKey: Key.scrollEnabled) ?? true }
         set { store.setBool(newValue, forKey: Key.scrollEnabled) }
     }
 
@@ -71,7 +71,7 @@ public struct Preferences {
     }
 
     public var useStaticWidth: Bool {
-        get { store.bool(forKey: Key.useStaticWidth) }
+        get { store.bool(forKey: Key.useStaticWidth) ?? false }
         set { store.setBool(newValue, forKey: Key.useStaticWidth) }
     }
 

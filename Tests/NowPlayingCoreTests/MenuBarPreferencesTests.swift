@@ -8,10 +8,10 @@ final class MenuBarPreferencesTests: XCTestCase {
 
     func testDefaultsInMenuBarStyle() {
         let style = makePrefs().menuBarStyle
-        XCTAssertFalse(style.progressBarEnabled)
+        XCTAssertTrue(style.progressBarEnabled)
         XCTAssertEqual(style.thickness, 2)
         XCTAssertEqual(style.colorHex, "#1DB954FF")
-        XCTAssertFalse(style.scrollEnabled)
+        XCTAssertTrue(style.scrollEnabled)
         XCTAssertEqual(style.scrollSpeed, 20)
         XCTAssertEqual(style.maxWidth, 150)
         XCTAssertEqual(style.pauseAtEnds, 1)
