@@ -28,6 +28,7 @@ public actor SpotifyAuth {
     private let http: HTTPFetching
     private let keychain: Keychain
     private let refreshAccount = "spotify-refresh-token"
+    private let grantedScopeAccount = "spotify-granted-scope"
 
     private var accessToken: String?
     private var expiry: Date?
@@ -42,6 +43,12 @@ public actor SpotifyAuth {
 
     public var isLoggedIn: Bool {
         keychain.get(refreshAccount) != nil
+    }
+
+    /// The scope granted at the last successful login (stored in the Keychain,
+    /// not in the preferences file). Used to detect when a re-login is needed.
+    public var grantedScope: String? {
+        keychain.get(grantedScopeAccount)
     }
 
     public func authorizeURL(pkce: PKCE, state: String) -> URL {
@@ -67,6 +74,7 @@ public actor SpotifyAuth {
             "code_verifier": verifier,
         ]))
         store(token)
+        keychain.set(config.scope, for: grantedScopeAccount)
     }
 
     public func validAccessToken() async throws -> String {
@@ -92,6 +100,7 @@ public actor SpotifyAuth {
 
     public func logout() {
         keychain.delete(refreshAccount)
+        keychain.delete(grantedScopeAccount)
         accessToken = nil
         expiry = nil
     }

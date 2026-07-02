@@ -96,7 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         guard let auth, let config else { loggedIn = false; return }
         let hasSession = await auth.isLoggedIn
         let reauth = ScopeCheck.needsReauth(
-            granted: preferences.grantedScope, required: config.scope)
+            granted: await auth.grantedScope, required: config.scope)
         loggedIn = hasSession && !reauth
     }
 
@@ -258,7 +258,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
             guard let auth else { return }
             if await auth.isLoggedIn {
                 await auth.logout()
-                preferences.grantedScope = nil
                 loggedIn = false
                 playback = nil
                 currentArtwork = nil
@@ -291,7 +290,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 // Client ID was changed in Preferences mid-login; this flow is stale.
                 return
             }
-            preferences.grantedScope = config.scope
+            // Granted scope was persisted to the Keychain by auth.exchange.
             loggedIn = true
             startPolling()
             await tick()

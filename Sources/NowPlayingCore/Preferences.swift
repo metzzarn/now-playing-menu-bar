@@ -6,7 +6,6 @@ public struct Preferences {
     private enum Key {
         static let clientID = "clientID"
         static let refreshInterval = "refreshInterval"
-        static let grantedScope = "grantedScope"
         static let progressBarEnabled = "progressBarEnabled"
         static let progressBarThickness = "progressBarThickness"
         static let progressBarColorHex = "progressBarColorHex"
@@ -42,11 +41,6 @@ public struct Preferences {
     public var refreshInterval: TimeInterval {
         get { store.double(forKey: Key.refreshInterval) ?? 3 }
         set { store.setDouble(newValue, forKey: Key.refreshInterval) }
-    }
-
-    public var grantedScope: String? {
-        get { store.string(forKey: Key.grantedScope) }
-        set { store.setString(newValue, forKey: Key.grantedScope) }
     }
 
     // MARK: - Menu bar appearance
