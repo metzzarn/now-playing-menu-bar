@@ -4,7 +4,7 @@ import XCTest
 final class ThemeTests: XCTestCase {
     func testDefaultColorsMatchDefaultTheme() {
         // The app's default: system colors (nil) + Spotify-green bar.
-        let theme = Theme.matching(background: nil, text: nil, menuBarText: nil,
+        let theme = Theme.matching(background: nil, text: nil, menuBarText: "#FFFFFFFF",
                                    progressBarColor: "#1DB954FF", progressBarBackground: nil)
         XCTAssertEqual(theme?.name, "Default")
     }
@@ -19,7 +19,7 @@ final class ThemeTests: XCTestCase {
 
     func testCaseInsensitiveMatch() {
         let theme = Theme.matching(background: "#191414ff", text: "#ffffffff",
-                                   menuBarText: "#1db954ff", progressBarColor: "#1db954ff",
+                                   menuBarText: "#ffffffff", progressBarColor: "#1db954ff",
                                    progressBarBackground: "#404040ff")
         XCTAssertEqual(theme?.name, "Spotify")
     }

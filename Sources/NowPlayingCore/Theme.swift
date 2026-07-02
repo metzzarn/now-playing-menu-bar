@@ -22,13 +22,14 @@ public struct Theme: Equatable {
 
     public static let all: [Theme] = [.default, .spotify, .dark, .light, .midnight, .solarized]
 
-    /// The original look: system colors with a Spotify-green progress bar.
+    /// The original look: system background/text with a white menu-bar title and
+    /// a Spotify-green progress bar.
     public static let `default` = Theme(
-        name: "Default", background: nil, text: nil, menuBarText: nil,
+        name: "Default", background: nil, text: nil, menuBarText: "#FFFFFFFF",
         progressBarColor: "#1DB954FF", progressBarBackground: nil)
 
     public static let spotify = Theme(
-        name: "Spotify", background: "#191414FF", text: "#FFFFFFFF", menuBarText: "#1DB954FF",
+        name: "Spotify", background: "#191414FF", text: "#FFFFFFFF", menuBarText: "#FFFFFFFF",
         progressBarColor: "#1DB954FF", progressBarBackground: "#404040FF")
 
     public static let dark = Theme(
@@ -40,11 +41,11 @@ public struct Theme: Equatable {
         progressBarColor: "#0A84FFFF", progressBarBackground: "#D0D0D0FF")
 
     public static let midnight = Theme(
-        name: "Midnight", background: "#0B1021FF", text: "#C0CAF5FF", menuBarText: "#7AA2F7FF",
+        name: "Midnight", background: "#0B1021FF", text: "#C0CAF5FF", menuBarText: "#FFFFFFFF",
         progressBarColor: "#7AA2F7FF", progressBarBackground: "#2A2E45FF")
 
     public static let solarized = Theme(
-        name: "Solarized", background: "#002B36FF", text: "#93A1A1FF", menuBarText: "#B58900FF",
+        name: "Solarized", background: "#002B36FF", text: "#93A1A1FF", menuBarText: "#FFFFFFFF",
         progressBarColor: "#268BD2FF", progressBarBackground: "#073642FF")
 
     /// Returns the theme whose colors equal the given values (case-insensitive), or
