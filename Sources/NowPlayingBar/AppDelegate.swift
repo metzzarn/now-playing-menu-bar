@@ -223,6 +223,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     private func refreshMenuBar() {
         let text: String
         let progress: Double?
+        var hasTrack = false
         if !loggedIn {
             text = "Login"
             progress = nil
@@ -236,11 +237,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
             ])
             progress = playback.durationMs > 0
                 ? Double(localProgressMs) / Double(playback.durationMs) : nil
+            hasTrack = true
         } else {
             text = "♪"
             progress = nil
         }
-        statusView.update(text: text, progress: progress, style: preferences.menuBarStyle)
+        statusView.update(text: text, progress: progress, hasTrack: hasTrack,
+                          style: preferences.menuBarStyle)
         let width = statusView.desiredWidth
         if statusItem.length != width { statusItem.length = width }
     }

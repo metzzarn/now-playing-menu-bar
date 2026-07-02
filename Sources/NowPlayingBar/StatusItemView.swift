@@ -13,25 +13,31 @@ final class StatusItemView: NSView {
         staticWidth: 150, maxWidth: 150, pauseAtEnds: 1, alignment: .left)
 
     private var textWidth: CGFloat = 0
+    private var hasTrack = false
     private var scrollStart = Date()
     private var marqueeTimer: Timer?
 
     private let font = NSFont.menuBarFont(ofSize: 0)
     private let horizontalPadding: CGFloat = 6
 
+    /// Static width applies only while a track is showing; otherwise the item
+    /// sizes to the (short) idle/login text.
+    private var usesStaticWidth: Bool { style.useStaticWidth && hasTrack }
+
     /// Width the status item should occupy: a fixed static width, or the text
     /// width capped at the max width.
     var desiredWidth: CGFloat {
-        let base = style.useStaticWidth ? style.staticWidth : min(textWidth, style.maxWidth)
+        let base = usesStaticWidth ? style.staticWidth : min(textWidth, style.maxWidth)
         return base + horizontalPadding
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
-    func update(text: String, progress: Double?, style: MenuBarStyle) {
+    func update(text: String, progress: Double?, hasTrack: Bool, style: MenuBarStyle) {
         let textChanged = text != self.text
         self.text = text
         self.progress = progress
+        self.hasTrack = hasTrack
         self.style = style
         self.textWidth = (text as NSString).size(withAttributes: [.font: font]).width
         if textChanged { scrollStart = Date() }
@@ -42,7 +48,8 @@ final class StatusItemView: NSView {
     // Decided against the active width cap, not the current bounds, so the
     // decision doesn't depend on statusItem.length having been applied yet.
     private var isScrolling: Bool {
-        style.scrollEnabled && textWidth > style.widthCap + 0.5
+        let cap = usesStaticWidth ? style.staticWidth : style.maxWidth
+        return style.scrollEnabled && textWidth > cap + 0.5
     }
 
     private func syncMarqueeTimer() {
