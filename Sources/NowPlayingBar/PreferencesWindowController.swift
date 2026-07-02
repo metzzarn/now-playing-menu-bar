@@ -32,6 +32,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let appTextWell = NSColorWell()
     private let menuBarTextWell = NSColorWell()
     private let themePopup = NSPopUpButton()
+    private let tabView = NSTabView()
 
     // Working color values; nil = system color. Persisted directly on Save.
     private var workingBackground: String?
@@ -65,7 +66,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         guard let content = window?.contentView else { return }
         configureControls()
 
-        let tabView = NSTabView()
         tabView.translatesAutoresizingMaskIntoConstraints = false
         tabView.addTabViewItem(tab("Spotify", view: spotifyTab()))
         tabView.addTabViewItem(tab("Menu Bar", view: menuBarTab()))
@@ -300,15 +300,23 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         content.wantsLayer = true
         content.layer?.backgroundColor = background.cgColor
         applyTextColor(text, to: content)
+        // Non-selected tabs aren't in the view hierarchy, so recolor each tab's view.
+        for item in tabView.tabViewItems {
+            if let view = item.view { applyTextColor(text, to: view) }
+        }
     }
 
     private func applyTextColor(_ color: NSColor, to view: NSView) {
         for subview in view.subviews {
             if let label = subview as? NSTextField,
-               !label.isEditable, !label.isBezeled,
-               subview !== formatErrorLabel, subview !== variablesHint,
-               subview !== thicknessLabel {
+               !label.isEditable, !label.isBezeled, subview !== formatErrorLabel {
                 label.textColor = color
+            }
+            if let popup = subview as? NSPopUpButton {
+                for item in popup.itemArray {
+                    item.attributedTitle = NSAttributedString(
+                        string: item.title, attributes: [.foregroundColor: color])
+                }
             }
             applyTextColor(color, to: subview)
         }
