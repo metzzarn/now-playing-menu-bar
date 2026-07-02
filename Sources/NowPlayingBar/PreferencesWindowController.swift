@@ -31,6 +31,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let appBackgroundWell = NSColorWell()
     private let appTextWell = NSColorWell()
     private let menuBarTextWell = NSColorWell()
+    private let opacitySlider = NSSlider()
     private let themePopup = NSPopUpButton()
     private let tabView = NSTabView()
 
@@ -169,6 +170,13 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         configureColorWell(appTextWell, hex: workingText, systemColor: .labelColor)
         configureColorWell(menuBarTextWell, hex: workingMenuBarText, systemColor: .labelColor)
 
+        opacitySlider.minValue = PreferenceDefaults.minPopupOpacity
+        opacitySlider.maxValue = 1
+        opacitySlider.doubleValue = preferences.popupOpacity
+        opacitySlider.isContinuous = true
+        opacitySlider.translatesAutoresizingMaskIntoConstraints = false
+        opacitySlider.widthAnchor.constraint(equalToConstant: 160).isActive = true
+
         themePopup.addItem(withTitle: "Custom")
         Theme.all.forEach { themePopup.addItem(withTitle: $0.name) }
         themePopup.target = self
@@ -230,6 +238,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             labeledRow("Background color:", appBackgroundWell),
             labeledRow("Text color:", appTextWell),
             labeledRow("Menu bar text color:", menuBarTextWell),
+            labeledRow("Popup opacity:", opacitySlider),
             divider(),
             sectionLabel("Progress Bar"),
             labeledRow("Bar thickness:", thicknessRow),
@@ -446,6 +455,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         preferences.menuBarTextColorHex = workingMenuBarText
         preferences.progressBarColorHex = workingBarColor
         preferences.progressBarBackgroundColorHex = workingBarBackground
+        preferences.popupOpacity = opacitySlider.doubleValue
         onSave(preferences)
         applyWindowColors()
     }

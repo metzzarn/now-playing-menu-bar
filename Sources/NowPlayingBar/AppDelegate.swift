@@ -304,7 +304,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         let background = preferences.appBackgroundColorHex.flatMap(NSColor.fromHex)
             ?? .windowBackgroundColor
         let text = preferences.appTextColorHex.flatMap(NSColor.fromHex) ?? .labelColor
-        nowPlayingView.setColors(background: background, text: text)
+        nowPlayingView.setColors(background: background, text: text,
+                                 opacity: preferences.popupOpacity)
     }
 
     private func applyLoggedOut() {

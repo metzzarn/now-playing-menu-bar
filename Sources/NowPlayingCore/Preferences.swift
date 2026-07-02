@@ -21,6 +21,7 @@ public struct Preferences {
         static let appTextColorHex = "appTextColorHex"
         static let menuBarTextColorHex = "menuBarTextColorHex"
         static let progressBarBackgroundColorHex = "progressBarBackgroundColorHex"
+        static let popupOpacity = "popupOpacity"
     }
 
     public static let defaultTrackTemplate = PreferenceDefaults.trackTemplate
@@ -117,6 +118,14 @@ public struct Preferences {
     public var progressBarBackgroundColorHex: String? {
         get { store.string(forKey: Key.progressBarBackgroundColorHex) }
         set { store.setString(newValue, forKey: Key.progressBarBackgroundColorHex) }
+    }
+
+    public var popupOpacity: Double {
+        get {
+            let value = store.double(forKey: Key.popupOpacity) ?? PreferenceDefaults.popupOpacity
+            return min(1, max(PreferenceDefaults.minPopupOpacity, value))
+        }
+        set { store.setDouble(newValue, forKey: Key.popupOpacity) }
     }
 
     public var trackTemplate: String {

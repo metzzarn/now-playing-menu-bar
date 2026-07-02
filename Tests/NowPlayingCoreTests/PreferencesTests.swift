@@ -35,6 +35,18 @@ final class PreferencesTests: XCTestCase {
         XCTAssertEqual(prefs.trackTemplate, Preferences.defaultTrackTemplate)
     }
 
+    func testPopupOpacityDefaultsToFull() {
+        XCTAssertEqual(Preferences(store: makeStore()).popupOpacity, 1)
+    }
+
+    func testPopupOpacityClampsToMinimum() {
+        var prefs = Preferences(store: makeStore())
+        prefs.popupOpacity = 0.1
+        XCTAssertEqual(prefs.popupOpacity, PreferenceDefaults.minPopupOpacity)
+        prefs.popupOpacity = 0.7
+        XCTAssertEqual(prefs.popupOpacity, 0.7)
+    }
+
     func testTrackTemplateRoundTripsWhenValid() {
         var prefs = Preferences(store: makeStore())
         prefs.trackTemplate = "<title> (<year>)"

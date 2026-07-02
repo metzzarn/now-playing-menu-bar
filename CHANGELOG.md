@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.13.0] - 2026-07-02
+
+### Added
+- Popup opacity slider (Style tab, 50–100%) that makes the now-playing popup's
+  background translucent while keeping art, text, and controls opaque.
+
 ## [0.12.0] - 2026-07-02
 
 ### Added

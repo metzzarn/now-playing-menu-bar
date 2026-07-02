@@ -64,8 +64,8 @@ final class NowPlayingView: NSView {
         positionLabel.stringValue = TimeFormatter.string(fromMs: ms)
     }
 
-    func setColors(background: NSColor, text: NSColor) {
-        backgroundColorValue = background
+    func setColors(background: NSColor, text: NSColor, opacity: Double) {
+        backgroundColorValue = background.withAlphaComponent(CGFloat(opacity))
         applyLayerBackground()
         trackLabel.textColor = text
         artistLabel.textColor = text.withAlphaComponent(0.7)

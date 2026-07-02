@@ -20,4 +20,7 @@ public enum PreferenceDefaults {
 
     public static let textAlignment: MenuBarTextAlignment = .left
     public static let trackTemplate = "<artists> - <title> <(year)>"
+
+    public static let popupOpacity: Double = 1
+    public static let minPopupOpacity: Double = 0.5
 }
