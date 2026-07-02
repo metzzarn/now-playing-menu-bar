@@ -8,9 +8,16 @@ final class StatusItemView: NSView {
     private var text = "Login"
     private var progress: Double?
     private var style = MenuBarStyle(
-        progressBarEnabled: false, thickness: 2, colorHex: "#1DB954FF",
-        scrollEnabled: false, scrollSpeed: 20, useStaticWidth: false,
-        staticWidth: 150, maxWidth: 200, pauseAtEnds: 1, alignment: .left)
+        progressBarEnabled: PreferenceDefaults.progressBarEnabled,
+        thickness: CGFloat(PreferenceDefaults.progressBarThickness),
+        colorHex: PreferenceDefaults.progressBarColorHex,
+        scrollEnabled: PreferenceDefaults.scrollEnabled,
+        scrollSpeed: CGFloat(PreferenceDefaults.scrollSpeed),
+        useStaticWidth: PreferenceDefaults.useStaticWidth,
+        staticWidth: CGFloat(PreferenceDefaults.staticWidth),
+        maxWidth: CGFloat(PreferenceDefaults.maxWidth),
+        pauseAtEnds: PreferenceDefaults.scrollPauseAtEnds,
+        alignment: PreferenceDefaults.textAlignment)
 
     private var textWidth: CGFloat = 0
     private var hasTrack = false

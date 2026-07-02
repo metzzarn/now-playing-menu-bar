@@ -23,8 +23,7 @@ public struct Preferences {
         static let progressBarBackgroundColorHex = "progressBarBackgroundColorHex"
     }
 
-    private static let defaultColorHex = "#1DB954FF"
-    public static let defaultTrackTemplate = "<artists> - <title> <(year)>"
+    public static let defaultTrackTemplate = PreferenceDefaults.trackTemplate
 
     public init(store: PreferencesStore = FilePreferencesStore()) {
         self.store = store
@@ -39,59 +38,62 @@ public struct Preferences {
     }
 
     public var refreshInterval: TimeInterval {
-        get { store.double(forKey: Key.refreshInterval) ?? 3 }
+        get { store.double(forKey: Key.refreshInterval) ?? PreferenceDefaults.refreshInterval }
         set { store.setDouble(newValue, forKey: Key.refreshInterval) }
     }
 
     // MARK: - Menu bar appearance
 
     public var progressBarEnabled: Bool {
-        get { store.bool(forKey: Key.progressBarEnabled) ?? true }
+        get { store.bool(forKey: Key.progressBarEnabled) ?? PreferenceDefaults.progressBarEnabled }
         set { store.setBool(newValue, forKey: Key.progressBarEnabled) }
     }
 
     public var progressBarThickness: Double {
-        get { store.double(forKey: Key.progressBarThickness) ?? 2 }
+        get { store.double(forKey: Key.progressBarThickness) ?? PreferenceDefaults.progressBarThickness }
         set { store.setDouble(newValue, forKey: Key.progressBarThickness) }
     }
 
     public var progressBarColorHex: String {
-        get { store.string(forKey: Key.progressBarColorHex) ?? Self.defaultColorHex }
+        get { store.string(forKey: Key.progressBarColorHex) ?? PreferenceDefaults.progressBarColorHex }
         set { store.setString(newValue, forKey: Key.progressBarColorHex) }
     }
 
     public var scrollEnabled: Bool {
-        get { store.bool(forKey: Key.scrollEnabled) ?? true }
+        get { store.bool(forKey: Key.scrollEnabled) ?? PreferenceDefaults.scrollEnabled }
         set { store.setBool(newValue, forKey: Key.scrollEnabled) }
     }
 
     public var scrollSpeed: Double {
-        get { store.double(forKey: Key.scrollSpeed) ?? 20 }
+        get { store.double(forKey: Key.scrollSpeed) ?? PreferenceDefaults.scrollSpeed }
         set { store.setDouble(newValue, forKey: Key.scrollSpeed) }
     }
 
     public var useStaticWidth: Bool {
-        get { store.bool(forKey: Key.useStaticWidth) ?? false }
+        get { store.bool(forKey: Key.useStaticWidth) ?? PreferenceDefaults.useStaticWidth }
         set { store.setBool(newValue, forKey: Key.useStaticWidth) }
     }
 
     public var staticWidth: Double {
-        get { store.double(forKey: Key.staticWidth) ?? 150 }
+        get { store.double(forKey: Key.staticWidth) ?? PreferenceDefaults.staticWidth }
         set { store.setDouble(newValue, forKey: Key.staticWidth) }
     }
 
     public var scrollMaxWidth: Double {
-        get { store.double(forKey: Key.scrollMaxWidth) ?? 200 }
+        get { store.double(forKey: Key.scrollMaxWidth) ?? PreferenceDefaults.maxWidth }
         set { store.setDouble(newValue, forKey: Key.scrollMaxWidth) }
     }
 
     public var scrollPauseAtEnds: Double {
-        get { store.double(forKey: Key.scrollPauseAtEnds) ?? 1 }
+        get { store.double(forKey: Key.scrollPauseAtEnds) ?? PreferenceDefaults.scrollPauseAtEnds }
         set { store.setDouble(newValue, forKey: Key.scrollPauseAtEnds) }
     }
 
     public var textAlignment: MenuBarTextAlignment {
-        get { store.string(forKey: Key.textAlignment).flatMap(MenuBarTextAlignment.init) ?? .left }
+        get {
+            store.string(forKey: Key.textAlignment).flatMap(MenuBarTextAlignment.init)
+                ?? PreferenceDefaults.textAlignment
+        }
         set { store.setString(newValue.rawValue, forKey: Key.textAlignment) }
     }
 
