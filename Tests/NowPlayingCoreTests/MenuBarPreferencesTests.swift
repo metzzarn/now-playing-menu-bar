@@ -3,7 +3,7 @@ import XCTest
 
 final class MenuBarPreferencesTests: XCTestCase {
     private func makePrefs() -> Preferences {
-        Preferences(defaults: UserDefaults(suiteName: "t.\(UUID().uuidString)")!)
+        Preferences(store: InMemoryPreferencesStore())
     }
 
     func testDefaultsInMenuBarStyle() {

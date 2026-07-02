@@ -3,7 +3,7 @@ import XCTest
 
 final class ClientIDResolverTests: XCTestCase {
     private func prefs(_ id: String?) -> Preferences {
-        var p = Preferences(defaults: UserDefaults(suiteName: "t.\(UUID().uuidString)")!)
+        var p = Preferences(store: InMemoryPreferencesStore())
         p.clientID = id
         return p
     }

@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 
 public struct Preferences {
-    private let defaults: UserDefaults
+    private let store: PreferencesStore
     private enum Key {
         static let clientID = "clientID"
         static let refreshInterval = "refreshInterval"
@@ -25,122 +25,114 @@ public struct Preferences {
     }
 
     private static let defaultColorHex = "#1DB954FF"
+    public static let defaultTrackTemplate = "<artists> - <title> <(year)>"
 
-    public init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
+    public init(store: PreferencesStore = FilePreferencesStore()) {
+        self.store = store
     }
 
     public var clientID: String? {
         get {
-            guard let value = defaults.string(forKey: Key.clientID), !value.isEmpty else {
-                return nil
-            }
+            guard let value = store.string(forKey: Key.clientID), !value.isEmpty else { return nil }
             return value
         }
-        set { defaults.set(newValue, forKey: Key.clientID) }
+        set { store.setString(newValue, forKey: Key.clientID) }
     }
 
     public var refreshInterval: TimeInterval {
-        get {
-            let stored = defaults.double(forKey: Key.refreshInterval)
-            return stored == 0 ? 3 : stored
-        }
-        set { defaults.set(newValue, forKey: Key.refreshInterval) }
+        get { store.double(forKey: Key.refreshInterval) ?? 3 }
+        set { store.setDouble(newValue, forKey: Key.refreshInterval) }
     }
 
     public var grantedScope: String? {
-        get { defaults.string(forKey: Key.grantedScope) }
-        set { defaults.set(newValue, forKey: Key.grantedScope) }
+        get { store.string(forKey: Key.grantedScope) }
+        set { store.setString(newValue, forKey: Key.grantedScope) }
     }
 
     // MARK: - Menu bar appearance
 
     public var progressBarEnabled: Bool {
-        get { defaults.bool(forKey: Key.progressBarEnabled) }
-        set { defaults.set(newValue, forKey: Key.progressBarEnabled) }
+        get { store.bool(forKey: Key.progressBarEnabled) }
+        set { store.setBool(newValue, forKey: Key.progressBarEnabled) }
     }
 
     public var progressBarThickness: Double {
-        get { (defaults.object(forKey: Key.progressBarThickness) as? Double) ?? 2 }
-        set { defaults.set(newValue, forKey: Key.progressBarThickness) }
+        get { store.double(forKey: Key.progressBarThickness) ?? 2 }
+        set { store.setDouble(newValue, forKey: Key.progressBarThickness) }
     }
 
     public var progressBarColorHex: String {
-        get { defaults.string(forKey: Key.progressBarColorHex) ?? Self.defaultColorHex }
-        set { defaults.set(newValue, forKey: Key.progressBarColorHex) }
+        get { store.string(forKey: Key.progressBarColorHex) ?? Self.defaultColorHex }
+        set { store.setString(newValue, forKey: Key.progressBarColorHex) }
     }
 
     public var scrollEnabled: Bool {
-        get { defaults.bool(forKey: Key.scrollEnabled) }
-        set { defaults.set(newValue, forKey: Key.scrollEnabled) }
+        get { store.bool(forKey: Key.scrollEnabled) }
+        set { store.setBool(newValue, forKey: Key.scrollEnabled) }
     }
 
     public var scrollSpeed: Double {
-        get { (defaults.object(forKey: Key.scrollSpeed) as? Double) ?? 20 }
-        set { defaults.set(newValue, forKey: Key.scrollSpeed) }
+        get { store.double(forKey: Key.scrollSpeed) ?? 20 }
+        set { store.setDouble(newValue, forKey: Key.scrollSpeed) }
     }
 
     public var useStaticWidth: Bool {
-        get { defaults.bool(forKey: Key.useStaticWidth) }
-        set { defaults.set(newValue, forKey: Key.useStaticWidth) }
+        get { store.bool(forKey: Key.useStaticWidth) }
+        set { store.setBool(newValue, forKey: Key.useStaticWidth) }
     }
 
     public var staticWidth: Double {
-        get { (defaults.object(forKey: Key.staticWidth) as? Double) ?? 150 }
-        set { defaults.set(newValue, forKey: Key.staticWidth) }
+        get { store.double(forKey: Key.staticWidth) ?? 150 }
+        set { store.setDouble(newValue, forKey: Key.staticWidth) }
     }
 
     public var scrollMaxWidth: Double {
-        get { (defaults.object(forKey: Key.scrollMaxWidth) as? Double) ?? 150 }
-        set { defaults.set(newValue, forKey: Key.scrollMaxWidth) }
+        get { store.double(forKey: Key.scrollMaxWidth) ?? 150 }
+        set { store.setDouble(newValue, forKey: Key.scrollMaxWidth) }
     }
 
     public var scrollPauseAtEnds: Double {
-        get { (defaults.object(forKey: Key.scrollPauseAtEnds) as? Double) ?? 1 }
-        set { defaults.set(newValue, forKey: Key.scrollPauseAtEnds) }
+        get { store.double(forKey: Key.scrollPauseAtEnds) ?? 1 }
+        set { store.setDouble(newValue, forKey: Key.scrollPauseAtEnds) }
     }
 
     public var textAlignment: MenuBarTextAlignment {
-        get {
-            (defaults.string(forKey: Key.textAlignment)).flatMap(MenuBarTextAlignment.init) ?? .left
-        }
-        set { defaults.set(newValue.rawValue, forKey: Key.textAlignment) }
+        get { store.string(forKey: Key.textAlignment).flatMap(MenuBarTextAlignment.init) ?? .left }
+        set { store.setString(newValue.rawValue, forKey: Key.textAlignment) }
     }
-
-    public static let defaultTrackTemplate = "<artists> - <title> <(year)>"
 
     // Color settings; nil means "use the system color".
 
     public var appBackgroundColorHex: String? {
-        get { defaults.string(forKey: Key.appBackgroundColorHex) }
-        set { defaults.set(newValue, forKey: Key.appBackgroundColorHex) }
+        get { store.string(forKey: Key.appBackgroundColorHex) }
+        set { store.setString(newValue, forKey: Key.appBackgroundColorHex) }
     }
 
     public var appTextColorHex: String? {
-        get { defaults.string(forKey: Key.appTextColorHex) }
-        set { defaults.set(newValue, forKey: Key.appTextColorHex) }
+        get { store.string(forKey: Key.appTextColorHex) }
+        set { store.setString(newValue, forKey: Key.appTextColorHex) }
     }
 
     public var menuBarTextColorHex: String? {
-        get { defaults.string(forKey: Key.menuBarTextColorHex) }
-        set { defaults.set(newValue, forKey: Key.menuBarTextColorHex) }
+        get { store.string(forKey: Key.menuBarTextColorHex) }
+        set { store.setString(newValue, forKey: Key.menuBarTextColorHex) }
     }
 
     public var progressBarBackgroundColorHex: String? {
-        get { defaults.string(forKey: Key.progressBarBackgroundColorHex) }
-        set { defaults.set(newValue, forKey: Key.progressBarBackgroundColorHex) }
+        get { store.string(forKey: Key.progressBarBackgroundColorHex) }
+        set { store.setString(newValue, forKey: Key.progressBarBackgroundColorHex) }
     }
 
     public var trackTemplate: String {
         get {
-            guard let value = defaults.string(forKey: Key.trackTemplate),
+            guard let value = store.string(forKey: Key.trackTemplate),
                   !value.isEmpty,
                   TrackTemplate.validate(value) == nil else {
                 return Self.defaultTrackTemplate
             }
             return value
         }
-        set { defaults.set(newValue, forKey: Key.trackTemplate) }
+        set { store.setString(newValue, forKey: Key.trackTemplate) }
     }
 
     public var menuBarStyle: MenuBarStyle {

@@ -15,7 +15,7 @@ final class ScopeCheckTests: XCTestCase {
     }
 
     func testGrantedScopeRoundTrips() {
-        var prefs = Preferences(defaults: UserDefaults(suiteName: "t.\(UUID().uuidString)")!)
+        var prefs = Preferences(store: InMemoryPreferencesStore())
         XCTAssertNil(prefs.grantedScope)
         prefs.grantedScope = "a b"
         XCTAssertEqual(prefs.grantedScope, "a b")
