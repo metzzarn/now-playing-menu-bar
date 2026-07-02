@@ -20,7 +20,7 @@ public struct Theme: Equatable {
         self.progressBarBackground = progressBarBackground
     }
 
-    public static let all: [Theme] = [.default, .spotify, .dark, .midnight, .solarized]
+    public static let all: [Theme] = [.default, .spotify, .dark, .light, .midnight, .solarized]
 
     /// The original look: system colors with a Spotify-green progress bar.
     public static let `default` = Theme(
@@ -34,6 +34,10 @@ public struct Theme: Equatable {
     public static let dark = Theme(
         name: "Dark", background: "#1E1E1EFF", text: "#FFFFFFFF", menuBarText: "#FFFFFFFF",
         progressBarColor: "#0A84FFFF", progressBarBackground: "#3A3A3AFF")
+
+    public static let light = Theme(
+        name: "Light", background: "#FFFFFFFF", text: "#000000FF", menuBarText: "#000000FF",
+        progressBarColor: "#0A84FFFF", progressBarBackground: "#D0D0D0FF")
 
     public static let midnight = Theme(
         name: "Midnight", background: "#0B1021FF", text: "#C0CAF5FF", menuBarText: "#7AA2F7FF",

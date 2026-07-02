@@ -72,6 +72,12 @@ final class NowPlayingView: NSView {
         albumLabel.textColor = text.withAlphaComponent(0.7)
         positionLabel.textColor = text.withAlphaComponent(0.7)
         lengthLabel.textColor = text.withAlphaComponent(0.7)
+
+        // Darker knob on a light background so it stays visible.
+        let srgb = background.usingColorSpace(.sRGB) ?? background
+        let luminance = 0.299 * srgb.redComponent + 0.587 * srgb.greenComponent
+            + 0.114 * srgb.blueComponent
+        seekBar.setKnobColor(luminance > 0.5 ? NSColor(white: 0.25, alpha: 1) : .white)
     }
 
     override func viewDidChangeEffectiveAppearance() {

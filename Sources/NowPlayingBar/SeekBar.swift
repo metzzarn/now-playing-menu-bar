@@ -24,6 +24,11 @@ final class SeekBar: NSSlider {
         doubleValue = max(0, min(1, value))
     }
 
+    func setKnobColor(_ color: NSColor) {
+        (cell as? SeekSliderCell)?.knobColor = color
+        needsDisplay = true
+    }
+
     @objc private func sliderChanged() {
         let fraction = doubleValue
         if NSApp.currentEvent?.type == .leftMouseUp {
@@ -37,6 +42,8 @@ final class SeekBar: NSSlider {
 /// Custom-drawn so the filled portion is always the accent color (the stock
 /// slider draws it gray until the app is active) and the knob is smaller.
 private final class SeekSliderCell: NSSliderCell {
+    var knobColor: NSColor = .white
+
     override func drawBar(inside rect: NSRect, flipped: Bool) {
         let radius = rect.height / 2
         NSColor.quaternaryLabelColor.setFill()
@@ -55,7 +62,7 @@ private final class SeekSliderCell: NSSliderCell {
         let box = NSRect(x: knobRect.midX - diameter / 2, y: knobRect.midY - diameter / 2,
                          width: diameter, height: diameter)
         let path = NSBezierPath(ovalIn: box)
-        NSColor.white.setFill()
+        knobColor.setFill()
         path.fill()
         NSColor.black.withAlphaComponent(0.15).setStroke()
         path.stroke()

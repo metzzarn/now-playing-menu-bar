@@ -3,6 +3,16 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.12.0] - 2026-07-02
+
+### Added
+- Light theme preset (re-added).
+
+### Changed
+- Preferences window floats on top; its appearance matches the chosen background
+  so controls stay visible on light themes.
+- The seek-bar knob darkens on a light background so it stays visible.
+
 ## [0.11.0] - 2026-07-02
 
 ### Added
