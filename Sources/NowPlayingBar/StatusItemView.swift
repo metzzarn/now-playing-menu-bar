@@ -71,8 +71,9 @@ final class StatusItemView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         NSBezierPath(rect: bounds).addClip()
 
+        let titleColor = style.textColorHex.flatMap(NSColor.fromHex) ?? .labelColor
         let attrs: [NSAttributedString.Key: Any] = [
-            .font: font, .foregroundColor: NSColor.labelColor,
+            .font: font, .foregroundColor: titleColor,
         ]
         let textSize = (text as NSString).size(withAttributes: attrs)
         let barSpace: CGFloat = (style.progressBarEnabled && progress != nil)
@@ -105,7 +106,9 @@ final class StatusItemView: NSView {
         if barSpace > 0, let progress {
             let fraction = CGFloat(max(0, min(1, progress)))
             let backgroundRect = NSRect(x: 0, y: 1, width: bounds.width, height: style.thickness)
-            NSColor.labelColor.withAlphaComponent(0.2).setFill()
+            let barBackground = style.barBackgroundColorHex.flatMap(NSColor.fromHex)
+                ?? NSColor.labelColor.withAlphaComponent(0.2)
+            barBackground.setFill()
             NSBezierPath(rect: backgroundRect).fill()
             let fillRect = NSRect(x: 0, y: 1, width: bounds.width * fraction, height: style.thickness)
             (NSColor.fromHex(style.colorHex) ?? .labelColor).setFill()

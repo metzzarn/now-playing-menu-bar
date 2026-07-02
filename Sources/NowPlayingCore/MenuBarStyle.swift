@@ -16,11 +16,16 @@ public struct MenuBarStyle: Equatable {
     public let maxWidth: CGFloat
     public let pauseAtEnds: TimeInterval
     public let alignment: MenuBarTextAlignment
+    /// Menu-bar title color; nil resolves to the system label color.
+    public let textColorHex: String?
+    /// Progress-bar track (unfilled) color; nil resolves to a translucent label color.
+    public let barBackgroundColorHex: String?
 
     public init(progressBarEnabled: Bool, thickness: CGFloat, colorHex: String,
                 scrollEnabled: Bool, scrollSpeed: CGFloat, useStaticWidth: Bool,
                 staticWidth: CGFloat, maxWidth: CGFloat, pauseAtEnds: TimeInterval,
-                alignment: MenuBarTextAlignment) {
+                alignment: MenuBarTextAlignment, textColorHex: String? = nil,
+                barBackgroundColorHex: String? = nil) {
         self.progressBarEnabled = progressBarEnabled
         self.thickness = thickness
         self.colorHex = colorHex
@@ -31,6 +36,8 @@ public struct MenuBarStyle: Equatable {
         self.maxWidth = maxWidth
         self.pauseAtEnds = pauseAtEnds
         self.alignment = alignment
+        self.textColorHex = textColorHex
+        self.barBackgroundColorHex = barBackgroundColorHex
     }
 
     /// The width cap the title is laid out against (static width when enabled,

@@ -49,6 +49,28 @@ final class MenuBarPreferencesTests: XCTestCase {
         XCTAssertEqual(updated.widthCap, 120)
     }
 
+    func testColorSettingsDefaultToSystem() {
+        let prefs = makePrefs()
+        XCTAssertNil(prefs.appBackgroundColorHex)
+        XCTAssertNil(prefs.appTextColorHex)
+        XCTAssertNil(prefs.menuBarTextColorHex)
+        XCTAssertNil(prefs.progressBarBackgroundColorHex)
+        // nil color hexes propagate to the style as nil (resolved to system colors in the UI).
+        XCTAssertNil(prefs.menuBarStyle.textColorHex)
+        XCTAssertNil(prefs.menuBarStyle.barBackgroundColorHex)
+    }
+
+    func testColorSettingsRoundTrip() {
+        var prefs = makePrefs()
+        prefs.appBackgroundColorHex = "#000000FF"
+        prefs.appTextColorHex = "#FFFFFFFF"
+        prefs.menuBarTextColorHex = "#1DB954FF"
+        prefs.progressBarBackgroundColorHex = "#333333FF"
+        XCTAssertEqual(prefs.appBackgroundColorHex, "#000000FF")
+        XCTAssertEqual(prefs.menuBarStyle.textColorHex, "#1DB954FF")
+        XCTAssertEqual(prefs.menuBarStyle.barBackgroundColorHex, "#333333FF")
+    }
+
     func testAlignmentDefaultsToLeftAndRoundTrips() {
         var prefs = makePrefs()
         XCTAssertEqual(prefs.menuBarStyle.alignment, .left)

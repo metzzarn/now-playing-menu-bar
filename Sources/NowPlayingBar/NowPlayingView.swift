@@ -55,6 +55,16 @@ final class NowPlayingView: NSView {
         positionLabel.stringValue = TimeFormatter.string(fromMs: ms)
     }
 
+    func setColors(background: NSColor, text: NSColor) {
+        wantsLayer = true
+        layer?.backgroundColor = background.cgColor
+        trackLabel.textColor = text
+        artistLabel.textColor = text.withAlphaComponent(0.7)
+        albumLabel.textColor = text.withAlphaComponent(0.7)
+        positionLabel.textColor = text.withAlphaComponent(0.7)
+        lengthLabel.textColor = text.withAlphaComponent(0.7)
+    }
+
     func showNothingPlaying() {
         trackLabel.stringValue = "Nothing playing"
         artistLabel.stringValue = ""

@@ -25,16 +25,21 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let maxWidthField = NSTextField()
     private let pauseField = NSTextField()
     private let alignmentPopup = NSPopUpButton()
+    private let barBackgroundWell = NSColorWell()
+    private let appBackgroundWell = NSColorWell()
+    private let appTextWell = NSColorWell()
+    private let menuBarTextWell = NSColorWell()
+    private var touchedWells: Set<ObjectIdentifier> = []
 
     init(preferences: Preferences, onSave: @escaping (Preferences) -> Void) {
         self.preferences = preferences
         self.onSave = onSave
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 510),
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 540),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered, defer: false)
         window.title = "Preferences"
-        window.contentMinSize = NSSize(width: 460, height: 490)
+        window.contentMinSize = NSSize(width: 460, height: 520)
         super.init(window: window)
         buildUI()
     }
@@ -55,6 +60,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         tabView.translatesAutoresizingMaskIntoConstraints = false
         tabView.addTabViewItem(tab("Spotify", view: spotifyTab()))
         tabView.addTabViewItem(tab("Menu Bar", view: menuBarTab()))
+        tabView.addTabViewItem(tab("Style", view: styleTab()))
         tabView.selectTabViewItem(at: 1)  // default to Menu Bar
 
         saveButton.title = "Save"
@@ -77,6 +83,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             saveRow.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
             saveRow.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -20),
         ])
+
+        applyWindowColors()
     }
 
     // MARK: - Control configuration
@@ -139,6 +147,15 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         formatErrorLabel.textColor = .systemRed
         formatErrorLabel.font = .systemFont(ofSize: 10)
 
+        configureColorWell(barBackgroundWell, hex: preferences.progressBarBackgroundColorHex,
+                           systemColor: NSColor.labelColor.withAlphaComponent(0.2))
+        configureColorWell(appBackgroundWell, hex: preferences.appBackgroundColorHex,
+                           systemColor: .windowBackgroundColor)
+        configureColorWell(appTextWell, hex: preferences.appTextColorHex,
+                           systemColor: .labelColor)
+        configureColorWell(menuBarTextWell, hex: preferences.menuBarTextColorHex,
+                           systemColor: .labelColor)
+
         updateWidthFieldStates()
         updateFormatValidation()
     }
@@ -164,6 +181,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         barRow.orientation = .horizontal
         barRow.spacing = 20
 
+        let barBackgroundRow = labeledRow("Bar background color:", barBackgroundWell)
+
         let scrollRow = NSStackView(views: [
             labeledRow("Scroll speed (pt/s):", speedField),
             labeledRow("End pause (s):", pauseField),
@@ -184,6 +203,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             divider(),
             progressEnabledButton,
             barRow,
+            barBackgroundRow,
             divider(),
             scrollEnabledButton,
             scrollRow,
@@ -192,6 +212,48 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             labeledRow("Static width (pt):", staticWidthField),
             labeledRow("Max width (pt):", maxWidthField),
         ])
+    }
+
+    private func styleTab() -> NSView {
+        tabContainer([
+            labeledRow("Background color:", appBackgroundWell),
+            labeledRow("Text color:", appTextWell),
+            labeledRow("Menu bar text color:", menuBarTextWell),
+        ])
+    }
+
+    private func configureColorWell(_ well: NSColorWell, hex: String?, systemColor: NSColor) {
+        well.color = hex.flatMap(NSColor.fromHex) ?? systemColor
+        well.target = self
+        well.action = #selector(colorWellChanged(_:))
+        well.translatesAutoresizingMaskIntoConstraints = false
+        well.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        well.heightAnchor.constraint(equalToConstant: 24).isActive = true
+    }
+
+    @objc private func colorWellChanged(_ sender: NSColorWell) {
+        touchedWells.insert(ObjectIdentifier(sender))
+    }
+
+    /// Applies the configured app colors to the Preferences window itself.
+    private func applyWindowColors() {
+        guard let content = window?.contentView else { return }
+        let background = preferences.appBackgroundColorHex.flatMap(NSColor.fromHex)
+            ?? .windowBackgroundColor
+        let text = preferences.appTextColorHex.flatMap(NSColor.fromHex) ?? .labelColor
+        content.wantsLayer = true
+        content.layer?.backgroundColor = background.cgColor
+        applyTextColor(text, to: content)
+    }
+
+    private func applyTextColor(_ color: NSColor, to view: NSView) {
+        for subview in view.subviews {
+            if let label = subview as? NSTextField,
+               !label.isEditable, !label.isBezeled, subview !== formatErrorLabel {
+                label.textColor = color
+            }
+            applyTextColor(color, to: subview)
+        }
     }
 
     /// Wraps rows in a padded, left-aligned vertical stack; separators stretch full width.
@@ -285,6 +347,19 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         preferences.scrollPauseAtEnds = Double(pauseField.stringValue) ?? preferences.scrollPauseAtEnds
         preferences.textAlignment = MenuBarTextAlignment.allCases[alignmentPopup.indexOfSelectedItem]
         preferences.trackTemplate = formatField.stringValue
+        if touchedWells.contains(ObjectIdentifier(barBackgroundWell)) {
+            preferences.progressBarBackgroundColorHex = barBackgroundWell.color.hexRGBA
+        }
+        if touchedWells.contains(ObjectIdentifier(appBackgroundWell)) {
+            preferences.appBackgroundColorHex = appBackgroundWell.color.hexRGBA
+        }
+        if touchedWells.contains(ObjectIdentifier(appTextWell)) {
+            preferences.appTextColorHex = appTextWell.color.hexRGBA
+        }
+        if touchedWells.contains(ObjectIdentifier(menuBarTextWell)) {
+            preferences.menuBarTextColorHex = menuBarTextWell.color.hexRGBA
+        }
         onSave(preferences)
+        applyWindowColors()
     }
 }

@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         installMainMenu()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         configureButtonAction()
+        applyAppColors()
         startInterpolationTimer()
         refreshMenuBar()
 
@@ -298,6 +299,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         }
     }
 
+    private func applyAppColors() {
+        let background = preferences.appBackgroundColorHex.flatMap(NSColor.fromHex)
+            ?? .windowBackgroundColor
+        let text = preferences.appTextColorHex.flatMap(NSColor.fromHex) ?? .labelColor
+        nowPlayingView.setColors(background: background, text: text)
+    }
+
     private func applyLoggedOut() {
         loggedIn = false
         playback = nil
@@ -314,6 +322,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
             guard let self else { return }
             self.preferences = updated
             self.rebuildClient()
+            self.applyAppColors()
             Task {
                 await self.refreshLoginState()
                 if self.loggedIn {

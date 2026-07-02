@@ -18,6 +18,10 @@ public struct Preferences {
         static let scrollPauseAtEnds = "scrollPauseAtEnds"
         static let textAlignment = "textAlignment"
         static let trackTemplate = "trackTemplate"
+        static let appBackgroundColorHex = "appBackgroundColorHex"
+        static let appTextColorHex = "appTextColorHex"
+        static let menuBarTextColorHex = "menuBarTextColorHex"
+        static let progressBarBackgroundColorHex = "progressBarBackgroundColorHex"
     }
 
     private static let defaultColorHex = "#1DB954FF"
@@ -105,6 +109,28 @@ public struct Preferences {
 
     public static let defaultTrackTemplate = "<artists> - <title> <(year)>"
 
+    // Color settings; nil means "use the system color".
+
+    public var appBackgroundColorHex: String? {
+        get { defaults.string(forKey: Key.appBackgroundColorHex) }
+        set { defaults.set(newValue, forKey: Key.appBackgroundColorHex) }
+    }
+
+    public var appTextColorHex: String? {
+        get { defaults.string(forKey: Key.appTextColorHex) }
+        set { defaults.set(newValue, forKey: Key.appTextColorHex) }
+    }
+
+    public var menuBarTextColorHex: String? {
+        get { defaults.string(forKey: Key.menuBarTextColorHex) }
+        set { defaults.set(newValue, forKey: Key.menuBarTextColorHex) }
+    }
+
+    public var progressBarBackgroundColorHex: String? {
+        get { defaults.string(forKey: Key.progressBarBackgroundColorHex) }
+        set { defaults.set(newValue, forKey: Key.progressBarBackgroundColorHex) }
+    }
+
     public var trackTemplate: String {
         get {
             guard let value = defaults.string(forKey: Key.trackTemplate),
@@ -128,6 +154,8 @@ public struct Preferences {
             staticWidth: CGFloat(max(40, staticWidth)),
             maxWidth: CGFloat(max(40, scrollMaxWidth)),
             pauseAtEnds: max(0, scrollPauseAtEnds),
-            alignment: textAlignment)
+            alignment: textAlignment,
+            textColorHex: menuBarTextColorHex,
+            barBackgroundColorHex: progressBarBackgroundColorHex)
     }
 }

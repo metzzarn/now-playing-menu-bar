@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0] - 2026-07-02
+
+### Added
+- Style tab in Preferences: background color, text color (applied to the
+  Preferences window and the now-playing view), and menu-bar title text color.
+- Progress-bar background (track) color setting, under Bar color.
+- Color settings default to system colors (adaptive light/dark) until customized.
+
 ## [0.5.0] - 2026-07-01
 
 ### Added
