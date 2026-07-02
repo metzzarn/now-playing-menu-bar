@@ -4,6 +4,19 @@ A lightweight macOS **menu bar** app that shows what's currently playing on
 Spotify and lets you control playback — without a Dock icon or a window in the
 way.
 
+## Screenshots
+
+Left-click for the now-playing view with album art, progress, and transport
+controls:
+
+![Now-playing drop-down](screenshots/Menu%20bar%20with%20drop-down.png)
+
+Preferences — the Spotify tab (Client ID + refresh) and the Menu Bar tab
+(title format, alignment, progress bar, and scrolling / width options):
+
+![Spotify settings](screenshots/Spotify%20settings.png)
+![Menu Bar settings](screenshots/Menu%20bar%20settings.png)
+
 ## What it does
 
 - Shows the current track in the menu bar, using a **customizable text format**
