@@ -290,7 +290,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 // Client ID was changed in Preferences mid-login; this flow is stale.
                 return
             }
-            // Granted scope was persisted to the Keychain by auth.exchange.
+            // Granted scope was persisted to the credentials file by auth.exchange.
             loggedIn = true
             startPolling()
             await tick()

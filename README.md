@@ -31,7 +31,8 @@ Preferences — the Spotify tab (Client ID + refresh) and the Menu Bar tab
   end pause).
 - **Click the album art** to bring the Spotify app to the front.
 - Logs in with **Spotify OAuth 2.0 (Authorization Code + PKCE)** — no client
-  secret. The refresh token is stored securely in the macOS **Keychain**.
+  secret. The refresh token is stored in `~/.config/nowplayingbar/credentials.json`
+  (owner-only, `0600`).
 
 ## Requirements
 
@@ -59,10 +60,9 @@ menu bar within a few seconds.
 > You can also provide the Client ID via the `SPOTIFY_CLIENT_ID` environment
 > variable — Preferences takes precedence when both are set.
 
-> **Keychain / signing note:** run via `swift run` produces an unsigned binary,
-> so macOS may prompt for Keychain access on login. Signing with an Apple
-> Development certificate (or shipping a signed `.app` bundle) avoids repeated
-> prompts.
+> **Security note:** the refresh token is stored in plaintext in
+> `~/.config/nowplayingbar/credentials.json` (locked to owner read/write). This
+> avoids macOS Keychain prompts at the cost of not encrypting the token at rest.
 
 ## Preferences
 
@@ -106,7 +106,7 @@ Invalid formats (unknown variable, unclosed `<`) show an error and disable Save.
 Swift Package Manager project with two targets:
 
 - **`NowPlayingCore`** — pure, unit-tested logic: OAuth/PKCE, Spotify API client,
-  playback model, preferences, title template, formatting, Keychain. No AppKit.
+  playback model, preferences, title template, formatting, secret storage. No AppKit.
 - **`NowPlayingBar`** — the AppKit executable: status-item rendering, menus,
   the now-playing view, the Preferences window, and timers.
 

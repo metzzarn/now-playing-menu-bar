@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.10.0] - 2026-07-02
+
+### Changed
+- The Spotify refresh token and granted scope are now stored in
+  `~/.config/nowplayingbar/credentials.json` (owner-only, 0600) instead of the
+  macOS Keychain — no more Keychain password prompts. The token is plaintext on disk.
+
 ## [0.9.0] - 2026-07-02
 
 ### Changed

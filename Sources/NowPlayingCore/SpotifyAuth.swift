@@ -26,7 +26,7 @@ public enum AuthError: Error {
 public actor SpotifyAuth {
     private let config: SpotifyConfig
     private let http: HTTPFetching
-    private let keychain: Keychain
+    private let secrets: SecretStore
     private let refreshAccount = "spotify-refresh-token"
     private let grantedScopeAccount = "spotify-granted-scope"
 
@@ -35,20 +35,20 @@ public actor SpotifyAuth {
 
     public init(config: SpotifyConfig,
                 http: HTTPFetching = URLSession.shared,
-                keychain: Keychain = Keychain()) {
+                secrets: SecretStore = FileSecretStore()) {
         self.config = config
         self.http = http
-        self.keychain = keychain
+        self.secrets = secrets
     }
 
     public var isLoggedIn: Bool {
-        keychain.get(refreshAccount) != nil
+        secrets.get(refreshAccount) != nil
     }
 
-    /// The scope granted at the last successful login (stored in the Keychain,
-    /// not in the preferences file). Used to detect when a re-login is needed.
+    /// The scope granted at the last successful login (stored in the credentials
+    /// file, not the preferences file). Used to detect when a re-login is needed.
     public var grantedScope: String? {
-        keychain.get(grantedScopeAccount)
+        secrets.get(grantedScopeAccount)
     }
 
     public func authorizeURL(pkce: PKCE, state: String) -> URL {
@@ -74,7 +74,7 @@ public actor SpotifyAuth {
             "code_verifier": verifier,
         ]))
         store(token)
-        keychain.set(config.scope, for: grantedScopeAccount)
+        secrets.set(config.scope, for: grantedScopeAccount)
     }
 
     public func validAccessToken() async throws -> String {
@@ -86,7 +86,7 @@ public actor SpotifyAuth {
 
     @discardableResult
     public func refresh() async throws -> String {
-        guard let refreshToken = keychain.get(refreshAccount) else {
+        guard let refreshToken = secrets.get(refreshAccount) else {
             throw AuthError.notLoggedIn
         }
         let token = try await postToken(form([
@@ -99,8 +99,8 @@ public actor SpotifyAuth {
     }
 
     public func logout() {
-        keychain.delete(refreshAccount)
-        keychain.delete(grantedScopeAccount)
+        secrets.delete(refreshAccount)
+        secrets.delete(grantedScopeAccount)
         accessToken = nil
         expiry = nil
     }
@@ -109,7 +109,7 @@ public actor SpotifyAuth {
         accessToken = token.accessToken
         expiry = Date().addingTimeInterval(TimeInterval(token.expiresIn))
         if let refreshToken = token.refreshToken {
-            keychain.set(refreshToken, for: refreshAccount)
+            secrets.set(refreshToken, for: refreshAccount)
         }
     }
 
