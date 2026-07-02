@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.14.0] - 2026-07-02
+
+### Added
+- A live now-playing preview panel appears below the menu-bar item while the
+  Preferences window is open, restyling when you Save.
+
+### Changed
+- Popup opacity range widened to 20–100%.
+
 ## [0.13.0] - 2026-07-02
 
 ### Added

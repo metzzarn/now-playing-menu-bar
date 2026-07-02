@@ -1,9 +1,10 @@
 import AppKit
 import NowPlayingCore
 
-final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate {
+final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSWindowDelegate {
     private var preferences: Preferences
     private let onSave: (Preferences) -> Void
+    var onClose: (() -> Void)?
     private let clientIDField = NSTextField()
     private let intervalPopup = NSPopUpButton()
     private let formatField = NSTextField()
@@ -53,7 +54,12 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         window.contentMinSize = NSSize(width: 460, height: 580)
         window.level = .floating
         super.init(window: window)
+        window.delegate = self
         buildUI()
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        onClose?()
     }
 
     required init?(coder: NSCoder) { fatalError("not implemented") }

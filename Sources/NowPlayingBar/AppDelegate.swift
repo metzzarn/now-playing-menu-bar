@@ -6,8 +6,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     private var statusItem: NSStatusItem!
     private let menuBuilder = MenuBarController()
     private let nowPlayingView = NowPlayingView()
+    private let previewView = NowPlayingView()
+    private var previewPanel: NSPanel?
     private let statusView = StatusItemView()
     private let artworkLoader = ArtworkLoader()
+
+    /// The now-playing view in the menu, plus the preview shown while Preferences is open.
+    private var nowPlayingViews: [NowPlayingView] { [nowPlayingView, previewView] }
 
     private var preferences = Preferences()
     private var config: SpotifyConfig?
@@ -30,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         super.init()
         rebuildClient()
         nowPlayingView.delegate = self
+        previewView.delegate = self
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -163,7 +169,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     private func interpolate() {
         guard let playback, playback.isPlaying else { return }
         localProgressMs = min(localProgressMs + 1000, playback.durationMs)
-        nowPlayingView.updateProgress(ms: localProgressMs)
+        nowPlayingViews.forEach { $0.updateProgress(ms: localProgressMs) }
         refreshMenuBar()
     }
 
@@ -196,7 +202,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         } else {
             playback = nil
             currentArtwork = nil
-            nowPlayingView.showNothingPlaying()
+            nowPlayingViews.forEach { $0.showNothingPlaying() }
             refreshMenuBar()
         }
     }
@@ -207,7 +213,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         localProgressMs = state.progressMs
         if trackChanged { currentArtwork = nil }
         refreshMenuBar()
-        nowPlayingView.update(state: state, artwork: currentArtwork)
+        nowPlayingViews.forEach { $0.update(state: state, artwork: currentArtwork) }
 
         if trackChanged, let url = state.artworkURL {
             artworkRequestID += 1
@@ -216,7 +222,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 let image = await artworkLoader.image(for: url)
                 guard requestID == artworkRequestID else { return }
                 currentArtwork = image
-                if let playback { nowPlayingView.update(state: playback, artwork: image) }
+                if let playback {
+                    nowPlayingViews.forEach { $0.update(state: playback, artwork: image) }
+                }
             }
         }
     }
@@ -304,8 +312,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         let background = preferences.appBackgroundColorHex.flatMap(NSColor.fromHex)
             ?? .windowBackgroundColor
         let text = preferences.appTextColorHex.flatMap(NSColor.fromHex) ?? .labelColor
-        nowPlayingView.setColors(background: background, text: text,
-                                 opacity: preferences.popupOpacity)
+        nowPlayingViews.forEach {
+            $0.setColors(background: background, text: text, opacity: preferences.popupOpacity)
+        }
     }
 
     private func applyLoggedOut() {
@@ -342,8 +351,52 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 self.refreshMenuBar()
             }
         }
+        controller.onClose = { [weak self] in self?.hidePreview() }
         prefsController = controller
         controller.show()
+        showPreview()
+    }
+
+    // MARK: - Now-playing preview (shown while Preferences is open)
+
+    private func showPreview() {
+        let panel = previewPanel ?? makePreviewPanel()
+        previewPanel = panel
+        applyAppColors()
+        if loggedIn, let playback {
+            previewView.update(state: playback, artwork: currentArtwork)
+        } else {
+            previewView.showNothingPlaying()
+        }
+        positionPreview(panel)
+        panel.orderFront(nil)
+    }
+
+    private func hidePreview() {
+        previewPanel?.orderOut(nil)
+    }
+
+    private func makePreviewPanel() -> NSPanel {
+        let frame = NSRect(x: 0, y: 0, width: 340, height: 150)
+        let panel = NSPanel(contentRect: frame,
+                            styleMask: [.borderless, .nonactivatingPanel],
+                            backing: .buffered, defer: false)
+        panel.level = .floating
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
+        previewView.frame = panel.contentView?.bounds ?? frame
+        previewView.autoresizingMask = [.width, .height]
+        panel.contentView?.addSubview(previewView)
+        return panel
+    }
+
+    private func positionPreview(_ panel: NSPanel) {
+        guard let button = statusItem.button, let buttonWindow = button.window else { return }
+        let inWindow = button.convert(button.bounds, to: nil)
+        let onScreen = buttonWindow.convertToScreen(inWindow)
+        panel.setFrameOrigin(NSPoint(x: onScreen.minX,
+                                     y: onScreen.minY - panel.frame.height - 4))
     }
 
     // MARK: - Transport (NowPlayingViewDelegate)
@@ -352,7 +405,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         guard let client, let current = playback else { return }
         let optimistic = withPlaying(current, !current.isPlaying)
         playback = optimistic
-        nowPlayingView.update(state: optimistic, artwork: currentArtwork)
+        nowPlayingViews.forEach { $0.update(state: optimistic, artwork: currentArtwork) }
         Task {
             do {
                 if optimistic.isPlaying { try await client.play() } else { try await client.pause() }
@@ -360,7 +413,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 // Only revert if no newer state (e.g. a poll tick) landed meanwhile.
                 if playback == optimistic {
                     playback = current
-                    nowPlayingView.update(state: current, artwork: currentArtwork)
+                    nowPlayingViews.forEach { $0.update(state: current, artwork: currentArtwork) }
                 }
             }
         }
@@ -377,7 +430,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         // stale progress for ~1s after a seek and would snap the bar back).
         localProgressMs = ms
         self.playback = withPlaying(playback, playback.isPlaying)
-        nowPlayingView.updateProgress(ms: ms)
+        nowPlayingViews.forEach { $0.updateProgress(ms: ms) }
         Task {
             try? await client.seek(toMs: ms)
         }
