@@ -9,7 +9,7 @@ way.
 Left-click for the now-playing view with album art, a seekable progress bar, and
 transport controls:
 
-![Now-playing popup](screenshots/Menu%20bar%20with%20popup.png)
+<img src="screenshots/Menu%20bar%20with%20popup.png" alt="Now-playing popup" width="420">
 
 Preferences, split across three tabs:
 
@@ -17,9 +17,9 @@ Preferences, split across three tabs:
 - **Menu Bar** — title format, alignment, progress bar, and scrolling / width options.
 - **Style** — theme presets plus background, text, and progress-bar colors.
 
-![Spotify tab](screenshots/Preferences%20-%20Spotify.png)
-![Menu Bar tab](screenshots/Preferences%20-%20Menu%20Bar.png)
-![Style tab](screenshots/Preferences%20-%20Style.png)
+<img src="screenshots/Preferences%20-%20Spotify.png" alt="Spotify tab" width="300">
+<img src="screenshots/Preferences%20-%20Menu%20Bar.png" alt="Menu Bar tab" width="300">
+<img src="screenshots/Preferences%20-%20Style.png" alt="Style tab" width="300">
 
 ## What it does
 
@@ -47,8 +47,9 @@ Preferences, split across three tabs:
 ## Setup
 
 1. Create an app at the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
-2. Add the redirect URI **`http://127.0.0.1:8888/callback`**.
-3. Copy the **Client ID**.
+2. Under the app's APIs, enable **Web API** and **Web Playback SDK**.
+3. Add the redirect URI **`http://127.0.0.1:8888/callback`**.
+4. Copy the **Client ID**.
 
 ## Running
 
