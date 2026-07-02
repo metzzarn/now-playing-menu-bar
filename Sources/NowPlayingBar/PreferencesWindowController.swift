@@ -186,8 +186,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         variablesHint.textColor = .secondaryLabelColor
 
         return tabContainer([
-            labeledRow("Format:", formatField),
             labeledRow("Text alignment:", alignmentPopup),
+            labeledRow("Format:", formatField),
             variablesHint,
             formatErrorLabel,
             divider(),
