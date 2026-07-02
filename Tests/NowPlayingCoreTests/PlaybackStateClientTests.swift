@@ -52,6 +52,14 @@ final class PlaybackStateClientTests: XCTestCase {
                        "https://api.spotify.com/v1/me/player/play")
     }
 
+    func testSeekIssuesPutWithPosition() async throws {
+        let mock = MockHTTP(status: 204)
+        try await client(mock).seek(toMs: 42000)
+        XCTAssertEqual(mock.lastRequest?.httpMethod, "PUT")
+        XCTAssertEqual(mock.lastRequest?.url?.absoluteString,
+                       "https://api.spotify.com/v1/me/player/seek?position_ms=42000")
+    }
+
     func testControl401Throws() async {
         do {
             try await client(MockHTTP(status: 401)).pause()

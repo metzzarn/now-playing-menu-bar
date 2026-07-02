@@ -7,6 +7,7 @@ protocol NowPlayingViewDelegate: AnyObject {
     func didTapPlayPause()
     func didTapNext()
     func didTapArtwork()
+    func didSeek(toFraction fraction: Double)
 }
 
 final class NowPlayingView: NSView {
@@ -17,12 +18,15 @@ final class NowPlayingView: NSView {
     private let trackLabel = NowPlayingView.makeLabel(bold: true)
     private let artistLabel = NowPlayingView.makeLabel(bold: false)
     private let albumLabel = NowPlayingView.makeLabel(bold: false)
-    private let progressBar = NSProgressIndicator()
+    private let seekBar = SeekBar()
     private let positionLabel = NowPlayingView.makeTimeLabel()
     private let lengthLabel = NowPlayingView.makeTimeLabel()
     private let previousButton = NSButton()
     private let playPauseButton = NSButton()
     private let nextButton = NSButton()
+
+    private var durationMs = 0
+    private var isScrubbing = false
 
     private static let placeholder = NSImage(
         systemSymbolName: "music.note", accessibilityDescription: nil) ?? NSImage()
@@ -41,9 +45,12 @@ final class NowPlayingView: NSView {
         artistLabel.stringValue = state.artist
         albumLabel.stringValue = state.album
         artworkView.image = artwork ?? Self.placeholder
-        progressBar.maxValue = Double(max(state.durationMs, 1))
-        progressBar.doubleValue = Double(min(state.progressMs, state.durationMs))
-        positionLabel.stringValue = TimeFormatter.string(fromMs: state.progressMs)
+        durationMs = state.durationMs
+        if !isScrubbing {
+            seekBar.setFraction(state.durationMs > 0
+                ? Double(state.progressMs) / Double(state.durationMs) : 0)
+            positionLabel.stringValue = TimeFormatter.string(fromMs: state.progressMs)
+        }
         lengthLabel.stringValue = TimeFormatter.string(fromMs: state.durationMs)
         playPauseButton.image = NSImage(
             systemSymbolName: state.isPlaying ? "pause.fill" : "play.fill",
@@ -52,7 +59,8 @@ final class NowPlayingView: NSView {
     }
 
     func updateProgress(ms: Int) {
-        progressBar.doubleValue = Double(min(ms, Int(progressBar.maxValue)))
+        guard !isScrubbing else { return }
+        seekBar.setFraction(durationMs > 0 ? Double(min(ms, durationMs)) / Double(durationMs) : 0)
         positionLabel.stringValue = TimeFormatter.string(fromMs: ms)
     }
 
@@ -83,7 +91,8 @@ final class NowPlayingView: NSView {
         artistLabel.stringValue = ""
         albumLabel.stringValue = ""
         artworkView.image = Self.placeholder
-        progressBar.doubleValue = 0
+        durationMs = 0
+        seekBar.setFraction(0)
         positionLabel.stringValue = "0:00"
         lengthLabel.stringValue = "0:00"
         [previousButton, playPauseButton, nextButton].forEach { $0.isEnabled = false }
@@ -113,11 +122,19 @@ final class NowPlayingView: NSView {
         labels.alignment = .leading
         labels.spacing = 2
 
-        progressBar.style = .bar
-        progressBar.isIndeterminate = false
-        progressBar.minValue = 0
-        progressBar.maxValue = 1
-        progressBar.translatesAutoresizingMaskIntoConstraints = false
+        seekBar.translatesAutoresizingMaskIntoConstraints = false
+        seekBar.heightAnchor.constraint(equalToConstant: 12).isActive = true
+        seekBar.onScrubChanged = { [weak self] fraction in
+            guard let self else { return }
+            self.isScrubbing = true
+            self.positionLabel.stringValue =
+                TimeFormatter.string(fromMs: Int(fraction * Double(self.durationMs)))
+        }
+        seekBar.onScrubEnded = { [weak self] fraction in
+            guard let self else { return }
+            self.isScrubbing = false
+            self.delegate?.didSeek(toFraction: fraction)
+        }
 
         let spacer = NSView()
         let times = NSStackView(views: [positionLabel, spacer, lengthLabel])
@@ -147,7 +164,7 @@ final class NowPlayingView: NSView {
             buttons.bottomAnchor.constraint(equalTo: buttonRow.bottomAnchor),
         ])
 
-        let rightColumn = NSStackView(views: [labels, progressBar, times, buttonRow])
+        let rightColumn = NSStackView(views: [labels, seekBar, times, buttonRow])
         rightColumn.orientation = .vertical
         rightColumn.alignment = .leading
         rightColumn.spacing = 8
@@ -169,8 +186,8 @@ final class NowPlayingView: NSView {
             artworkView.bottomAnchor.constraint(equalTo: root.bottomAnchor),
             labels.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
             labels.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
-            progressBar.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
-            progressBar.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
+            seekBar.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
+            seekBar.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
             times.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
             times.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
             buttonRow.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),

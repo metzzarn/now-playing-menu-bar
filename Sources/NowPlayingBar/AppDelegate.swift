@@ -368,6 +368,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     func didTapNext() { transport { try await $0.next() } }
     func didTapPrevious() { transport { try await $0.previous() } }
 
+    func didSeek(toFraction fraction: Double) {
+        guard let client, let playback, playback.durationMs > 0 else { return }
+        let ms = Int(fraction * Double(playback.durationMs))
+        localProgressMs = ms  // optimistic; interpolation continues from here
+        nowPlayingView.updateProgress(ms: ms)
+        Task {
+            do {
+                try await client.seek(toMs: ms)
+                await tick()
+            } catch {
+                // Seek failed (e.g. no active device): next poll reconciles.
+            }
+        }
+    }
+
     func didTapArtwork() {
         // Launches Spotify if needed and brings it to the front.
         if let url = URL(string: "spotify:") {

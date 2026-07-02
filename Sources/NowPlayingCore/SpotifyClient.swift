@@ -52,6 +52,9 @@ public struct SpotifyClient {
     public func previous() async throws { try await control(method: "POST", path: "previous") }
     public func play() async throws { try await control(method: "PUT", path: "play") }
     public func pause() async throws { try await control(method: "PUT", path: "pause") }
+    public func seek(toMs ms: Int) async throws {
+        try await control(method: "PUT", path: "seek?position_ms=\(max(0, ms))")
+    }
 
     private func control(method: String, path: String) async throws {
         let token = try await tokenProvider()

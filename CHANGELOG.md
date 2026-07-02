@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.11.0] - 2026-07-02
+
+### Added
+- Seek by clicking or dragging the progress bar in the now-playing view. The bar
+  scrubs live while dragging and seeks Spotify on release.
+
 ## [0.10.0] - 2026-07-02
 
 ### Changed
