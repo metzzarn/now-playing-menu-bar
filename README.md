@@ -6,16 +6,20 @@ way.
 
 ## Screenshots
 
-Left-click for the now-playing view with album art, progress, and transport
-controls:
+Left-click for the now-playing view with album art, a seekable progress bar, and
+transport controls:
 
-![Now-playing drop-down](screenshots/Menu%20bar%20with%20drop-down.png)
+![Now-playing popup](screenshots/Menu%20bar%20with%20popup.png)
 
-Preferences — the Spotify tab (Client ID + refresh) and the Menu Bar tab
-(title format, alignment, progress bar, and scrolling / width options):
+Preferences, split across three tabs:
 
-![Spotify settings](screenshots/Spotify%20settings.png)
-![Menu Bar settings](screenshots/Menu%20bar%20settings.png)
+- **Spotify** — Client ID and refresh interval.
+- **Menu Bar** — title format, alignment, progress bar, and scrolling / width options.
+- **Style** — theme presets plus background, text, and progress-bar colors.
+
+![Spotify tab](screenshots/Preferences%20-%20Spotify.png)
+![Menu Bar tab](screenshots/Preferences%20-%20Menu%20Bar.png)
+![Style tab](screenshots/Preferences%20-%20Style.png)
 
 ## What it does
 
