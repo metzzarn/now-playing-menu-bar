@@ -45,11 +45,26 @@ Preferences, split across three tabs:
   secret. The refresh token is stored in `~/.config/nowplayingbar/credentials.json`
   (owner-only, `0600`).
 
+## Install
+
+**Download a build** — grab `NowPlayingBar.app` from the
+[latest release](https://github.com/metzzarn/now-playing-menu-bar/releases/latest),
+then drag it into your **Applications** folder.
+
+The app is ad-hoc signed, so macOS Gatekeeper blocks it on first launch. To open
+it, **right-click the app → Open** and confirm (only needed once). Alternatively:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/NowPlayingBar.app
+```
+
+**Or build it yourself** — see [Building](#building) below.
+
 ## Requirements
 
 - macOS 13 or later
-- Swift 5.9+ toolchain (Xcode command-line tools)
 - A Spotify account and a Spotify **Client ID** (free to create)
+- To build from source: a Swift 5.9+ toolchain (Xcode command-line tools)
 
 ## Setup
 
@@ -59,6 +74,8 @@ Preferences, split across three tabs:
 4. Copy the **Client ID**.
 
 ## Running
+
+Run directly from source:
 
 ```bash
 swift run NowPlayingBar
@@ -135,5 +152,17 @@ Run the tests with:
 ```bash
 swift test
 ```
+
+## Building
+
+To build a distributable `NowPlayingBar.app` bundle (release binary + icon,
+ad-hoc signed):
+
+```bash
+scripts/build-app.sh
+```
+
+The bundle is written to `build/NowPlayingBar.app`; drag it into **Applications**
+to install. See the [Install](#install) section for the Gatekeeper first-launch step.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the feature history.
