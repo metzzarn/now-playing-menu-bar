@@ -202,7 +202,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         } else {
             playback = nil
             currentArtwork = nil
-            nowPlayingViews.forEach { $0.showNothingPlaying() }
+            nowPlayingViews.forEach { $0.showPlaceholder() }
             refreshMenuBar()
         }
     }
@@ -367,7 +367,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         if loggedIn, let playback {
             previewView.update(state: playback, artwork: currentArtwork)
         } else {
-            previewView.showNothingPlaying()
+            previewView.showPlaceholder()
         }
         positionPreview(panel)
         panel.orderFront(nil)

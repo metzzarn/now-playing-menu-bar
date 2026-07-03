@@ -98,15 +98,19 @@ final class NowPlayingView: NSView {
         }
     }
 
-    func showNothingPlaying() {
-        trackLabel.stringValue = "Nothing playing"
-        artistLabel.stringValue = ""
-        albumLabel.stringValue = ""
+    /// Fills the view with sample data when nothing is playing, so it doesn't look
+    /// empty (mainly for the Preferences preview). Controls are disabled.
+    func showPlaceholder() {
+        trackLabel.stringValue = "Track Name"
+        artistLabel.stringValue = "Artist Name"
+        albumLabel.stringValue = "Album"
         artworkView.image = Self.placeholder
-        durationMs = 0
-        seekBar.setFraction(0)
-        positionLabel.stringValue = "0:00"
-        lengthLabel.stringValue = "0:00"
+        durationMs = 225000
+        seekBar.setFraction(83.0 / 225.0)
+        positionLabel.stringValue = "1:23"
+        lengthLabel.stringValue = "3:45"
+        playPauseButton.image = NSImage(
+            systemSymbolName: "play.fill", accessibilityDescription: nil)
         [previousButton, playPauseButton, nextButton].forEach { $0.isEnabled = false }
     }
 
