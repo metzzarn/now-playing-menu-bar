@@ -6,16 +6,19 @@ way.
 
 ## Screenshots
 
-Left-click for the now-playing view with album art, a seekable progress bar, and
-transport controls:
+Left-click for the now-playing popup — a floating panel with album art, a
+seekable progress bar, and transport controls. Choose the **Simple** layout
+(art on the left) or **Large Art** (art centered on top):
 
-<img src="screenshots/Menu%20bar%20with%20popup.png" alt="Now-playing popup" width="420">
+<img src="screenshots/Now%20Playing%20-%20Simple.png" alt="Now Playing – Simple style" width="420">
+<img src="screenshots/Now%20Playing%20-%20Large%20art.png" alt="Now Playing – Large Art style" width="240">
 
 Preferences, split across three tabs:
 
 - **Spotify** — Client ID and refresh interval.
 - **Menu Bar** — title format, alignment, progress bar, and scrolling / width options.
-- **Style** — theme presets plus background, text, and progress-bar colors.
+- **Style** — theme presets, colors, the Now Playing view style, popup opacity
+  and corner radius, and progress-bar settings.
 
 <img src="screenshots/Preferences%20-%20Spotify.png" alt="Spotify tab" width="300">
 <img src="screenshots/Preferences%20-%20Menu%20Bar.png" alt="Menu Bar tab" width="300">
@@ -25,9 +28,13 @@ Preferences, split across three tabs:
 
 - Shows the current track in the menu bar, using a **customizable text format**
   (e.g. `Radiohead - Idioteque (2000)`).
-- **Left-click** the menu bar item to open a rich now-playing view: album art,
+- **Left-click** the menu bar item to open a rich now-playing popup: album art,
   track / artist / album, a progress bar with elapsed and total time, and
-  **previous / play-pause / next** controls.
+  **previous / play-pause / next** controls. It's a floating panel that
+  dismisses when you click outside it, and stays pinned while Preferences is open.
+- Two **Now Playing view styles**: **Simple** (album art on the left) or **Large
+  Art** (art centered on top, 50% larger). The popup's **opacity** and **corner
+  radius** are adjustable.
 - **Right-click** for a simple menu: Login / Logout, Preferences…, Quit.
 - Optional **thin progress bar** drawn under the menu-bar title (configurable
   thickness and color).
@@ -82,6 +89,14 @@ menu bar within a few seconds.
 - **Scroll long titles** — enable, speed, and end pause.
 - **Width** — grow the item up to a **max width**, or use a fixed **static
   width** (toggle chooses which).
+
+**Style tab**
+- **Theme** — presets (Default, Spotify, Dark, Light, Midnight, Solarized) that
+  fill all colors at once; editing any color shows "Custom".
+- **Colors** — background, text, and menu-bar text colors.
+- **Now Playing view** — the layout style (**Simple** / **Large Art**), popup
+  **opacity** (20–100%), and **corner radius** (0–24 pt).
+- **Progress bar** — bar thickness, color, and background color.
 
 ### Title format
 
