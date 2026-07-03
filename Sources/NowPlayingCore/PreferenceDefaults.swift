@@ -23,4 +23,7 @@ public enum PreferenceDefaults {
 
     public static let popupOpacity: Double = 1
     public static let minPopupOpacity: Double = 0.2
+
+    public static let popupCornerRadius: Double = 10
+    public static let maxPopupCornerRadius: Double = 24
 }

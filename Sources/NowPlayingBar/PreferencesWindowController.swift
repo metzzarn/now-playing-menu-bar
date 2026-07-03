@@ -33,6 +33,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let appTextWell = NSColorWell()
     private let menuBarTextWell = NSColorWell()
     private let opacitySlider = NSSlider()
+    private let cornerRadiusSlider = NSSlider()
     private let themePopup = NSPopUpButton()
     private let tabView = NSTabView()
 
@@ -183,6 +184,13 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         opacitySlider.translatesAutoresizingMaskIntoConstraints = false
         opacitySlider.widthAnchor.constraint(equalToConstant: 160).isActive = true
 
+        cornerRadiusSlider.minValue = 0
+        cornerRadiusSlider.maxValue = PreferenceDefaults.maxPopupCornerRadius
+        cornerRadiusSlider.doubleValue = preferences.popupCornerRadius
+        cornerRadiusSlider.isContinuous = true
+        cornerRadiusSlider.translatesAutoresizingMaskIntoConstraints = false
+        cornerRadiusSlider.widthAnchor.constraint(equalToConstant: 160).isActive = true
+
         themePopup.addItem(withTitle: "Custom")
         Theme.all.forEach { themePopup.addItem(withTitle: $0.name) }
         themePopup.target = self
@@ -244,7 +252,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             labeledRow("Background color:", appBackgroundWell),
             labeledRow("Text color:", appTextWell),
             labeledRow("Menu bar text color:", menuBarTextWell),
+            divider(),
+            sectionLabel("Now Playing view"),
             labeledRow("Popup opacity:", opacitySlider),
+            labeledRow("Corner radius:", cornerRadiusSlider),
             divider(),
             sectionLabel("Progress Bar"),
             labeledRow("Bar thickness:", thicknessRow),
@@ -462,6 +473,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         preferences.progressBarColorHex = workingBarColor
         preferences.progressBarBackgroundColorHex = workingBarBackground
         preferences.popupOpacity = opacitySlider.doubleValue
+        preferences.popupCornerRadius = cornerRadiusSlider.doubleValue
         onSave(preferences)
         applyWindowColors()
     }

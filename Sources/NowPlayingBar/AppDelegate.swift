@@ -322,6 +322,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
             ?? .windowBackgroundColor
         let text = preferences.appTextColorHex.flatMap(NSColor.fromHex) ?? .labelColor
         popupView.setColors(background: background, text: text, opacity: preferences.popupOpacity)
+        popupView.setCornerRadius(preferences.popupCornerRadius)
     }
 
     private func applyLoggedOut() {

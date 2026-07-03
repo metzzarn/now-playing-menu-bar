@@ -13,6 +13,7 @@ protocol NowPlayingViewDelegate: AnyObject {
 final class NowPlayingView: NSView {
     weak var delegate: NowPlayingViewDelegate?
     private var backgroundColorValue: NSColor = .windowBackgroundColor
+    private var cornerRadiusValue: CGFloat = CGFloat(PreferenceDefaults.popupCornerRadius)
 
     private let artworkView = NSButton()
     private let trackLabel = NowPlayingView.makeLabel(bold: true)
@@ -64,6 +65,11 @@ final class NowPlayingView: NSView {
         positionLabel.stringValue = TimeFormatter.string(fromMs: ms)
     }
 
+    func setCornerRadius(_ radius: Double) {
+        cornerRadiusValue = CGFloat(radius)
+        applyLayerBackground()
+    }
+
     func setColors(background: NSColor, text: NSColor, opacity: Double) {
         backgroundColorValue = background.withAlphaComponent(CGFloat(opacity))
         applyLayerBackground()
@@ -93,6 +99,8 @@ final class NowPlayingView: NSView {
 
     private func applyLayerBackground() {
         wantsLayer = true
+        layer?.cornerRadius = cornerRadiusValue
+        layer?.masksToBounds = true
         effectiveAppearance.performAsCurrentDrawingAppearance {
             layer?.backgroundColor = backgroundColorValue.cgColor
         }
@@ -192,7 +200,7 @@ final class NowPlayingView: NSView {
         addSubview(root)
 
         NSLayoutConstraint.activate([
-            root.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            root.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
             root.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             root.topAnchor.constraint(equalTo: topAnchor, constant: 12),
             root.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12),

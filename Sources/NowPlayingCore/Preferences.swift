@@ -22,6 +22,7 @@ public struct Preferences {
         static let menuBarTextColorHex = "menuBarTextColorHex"
         static let progressBarBackgroundColorHex = "progressBarBackgroundColorHex"
         static let popupOpacity = "popupOpacity"
+        static let popupCornerRadius = "popupCornerRadius"
     }
 
     public static let defaultTrackTemplate = PreferenceDefaults.trackTemplate
@@ -126,6 +127,14 @@ public struct Preferences {
             return min(1, max(PreferenceDefaults.minPopupOpacity, value))
         }
         set { store.setDouble(newValue, forKey: Key.popupOpacity) }
+    }
+
+    public var popupCornerRadius: Double {
+        get {
+            let value = store.double(forKey: Key.popupCornerRadius) ?? PreferenceDefaults.popupCornerRadius
+            return min(PreferenceDefaults.maxPopupCornerRadius, max(0, value))
+        }
+        set { store.setDouble(newValue, forKey: Key.popupCornerRadius) }
     }
 
     public var trackTemplate: String {
