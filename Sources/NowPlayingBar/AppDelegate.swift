@@ -378,17 +378,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     }
 
     private func makePreviewPanel() -> NSPanel {
-        let frame = NSRect(x: 0, y: 0, width: 340, height: 150)
-        let panel = NSPanel(contentRect: frame,
+        let size = NSSize(width: 340, height: 150)
+        let panel = NSPanel(contentRect: NSRect(origin: .zero, size: size),
                             styleMask: [.borderless, .nonactivatingPanel],
                             backing: .buffered, defer: false)
         panel.level = .floating
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
-        previewView.frame = panel.contentView?.bounds ?? frame
-        previewView.autoresizingMask = [.width, .height]
-        panel.contentView?.addSubview(previewView)
+        previewView.frame = NSRect(origin: .zero, size: size)
+        panel.contentView = previewView
+        panel.setContentSize(size)
         return panel
     }
 
