@@ -6,6 +6,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.16.0] - 2026-07-03
 
 ### Added
+- Now Playing style picker (Style tab → "Now Playing view"): "Simple" (the
+  original left-art layout) or "Large Art" (album art centered on top, 50%
+  larger). The floating popup resizes to fit the chosen style.
 - Corner-radius slider (0–24 pt) for the now-playing popup, under a new
   "Now Playing view" section on the Style tab. The Popup opacity slider moved
   into the same section.

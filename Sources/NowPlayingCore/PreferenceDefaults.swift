@@ -26,4 +26,6 @@ public enum PreferenceDefaults {
 
     public static let popupCornerRadius: Double = 10
     public static let maxPopupCornerRadius: Double = 24
+
+    public static let nowPlayingStyle: NowPlayingStyle = .simple
 }

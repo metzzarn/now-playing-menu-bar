@@ -26,6 +26,17 @@ final class NowPlayingView: NSView {
     private let playPauseButton = NSButton()
     private let nextButton = NSButton()
 
+    private let labelsStack = NSStackView()
+    private let timesStack = NSStackView()
+    private let buttonRow = NSView()
+    private var rootView: NSView?
+    private var styleConstraints: [NSLayoutConstraint] = []
+    private var style: NowPlayingStyle = .simple
+    /// Album-art side length in the Large Art style: 50% larger than Simple (~126 pt).
+    private static let largeArtSide: CGFloat = 189
+    private lazy var largeArtConstraint =
+        artworkView.widthAnchor.constraint(equalToConstant: Self.largeArtSide)
+
     private var durationMs = 0
     private var isScrubbing = false
 
@@ -68,6 +79,26 @@ final class NowPlayingView: NSView {
     func setCornerRadius(_ radius: Double) {
         cornerRadiusValue = CGFloat(radius)
         applyLayerBackground()
+    }
+
+    func setStyle(_ newStyle: NowPlayingStyle) {
+        guard newStyle != style || rootView == nil else { return }
+        style = newStyle
+        applyStyleLayout()
+    }
+
+    /// The panel size this view wants for the current style.
+    func preferredSize() -> NSSize {
+        switch style {
+        case .simple:
+            return NSSize(width: 340, height: 150)
+        case .largeArt:
+            layoutSubtreeIfNeeded()
+            let contentHeight = rootView?.fittingSize.height ?? 336
+            // Width = art + 12 pt inset each side, so the art (and the progress bar below
+            // it) sits an equal 12 pt from the top, left, and right edges.
+            return NSSize(width: Self.largeArtSide + 24, height: ceil(contentHeight) + 24)
+        }
     }
 
     func setColors(background: NSColor, text: NSColor, opacity: Double) {
@@ -141,10 +172,10 @@ final class NowPlayingView: NSView {
 
         artworkView.setContentHuggingPriority(.required, for: .horizontal)
 
-        let labels = NSStackView(views: [trackLabel, artistLabel, albumLabel])
-        labels.orientation = .vertical
-        labels.alignment = .leading
-        labels.spacing = 2
+        [trackLabel, artistLabel, albumLabel].forEach(labelsStack.addArrangedSubview)
+        labelsStack.orientation = .vertical
+        labelsStack.spacing = 2
+        labelsStack.translatesAutoresizingMaskIntoConstraints = false
 
         seekBar.onScrubChanged = { [weak self] fraction in
             guard let self else { return }
@@ -159,9 +190,10 @@ final class NowPlayingView: NSView {
         }
 
         let spacer = NSView()
-        let times = NSStackView(views: [positionLabel, spacer, lengthLabel])
-        times.orientation = .horizontal
-        times.distribution = .fill
+        [positionLabel, spacer, lengthLabel].forEach(timesStack.addArrangedSubview)
+        timesStack.orientation = .horizontal
+        timesStack.distribution = .fill
+        timesStack.translatesAutoresizingMaskIntoConstraints = false
         positionLabel.setContentHuggingPriority(.required, for: .horizontal)
         lengthLabel.setContentHuggingPriority(.required, for: .horizontal)
 
@@ -175,9 +207,7 @@ final class NowPlayingView: NSView {
         buttons.spacing = 28
         buttons.translatesAutoresizingMaskIntoConstraints = false
 
-        // Full-width row so the buttons can center without fighting the column's
-        // .leading alignment.
-        let buttonRow = NSView()
+        // Full-width row so the buttons can center without fighting the column's alignment.
         buttonRow.translatesAutoresizingMaskIntoConstraints = false
         buttonRow.addSubview(buttons)
         NSLayoutConstraint.activate([
@@ -186,35 +216,82 @@ final class NowPlayingView: NSView {
             buttons.bottomAnchor.constraint(equalTo: buttonRow.bottomAnchor),
         ])
 
-        let rightColumn = NSStackView(views: [labels, seekBar, times, buttonRow])
-        rightColumn.orientation = .vertical
-        rightColumn.alignment = .leading
-        rightColumn.spacing = 8
+        applyStyleLayout()
+    }
 
-        let root = NSStackView(views: [artworkView, rightColumn])
-        root.orientation = .horizontal
-        root.alignment = .top
-        root.distribution = .fill
-        root.spacing = 12
-        root.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(root)
+    /// Rebuilds the arranged layout for the current style. Reuses the shared subviews.
+    private func applyStyleLayout() {
+        NSLayoutConstraint.deactivate(styleConstraints)
+        styleConstraints.removeAll()
+        rootView?.removeFromSuperview()
+        largeArtConstraint.isActive = false
 
-        NSLayoutConstraint.activate([
-            root.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            root.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            root.topAnchor.constraint(equalTo: topAnchor, constant: 12),
-            root.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12),
-            artworkView.topAnchor.constraint(equalTo: root.topAnchor),
-            artworkView.bottomAnchor.constraint(equalTo: root.bottomAnchor),
-            labels.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
-            labels.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
-            seekBar.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
-            seekBar.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
-            times.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
-            times.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
-            buttonRow.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
-            buttonRow.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
-        ])
+        switch style {
+        case .simple:
+            [trackLabel, artistLabel, albumLabel].forEach { $0.alignment = .left }
+            labelsStack.alignment = .leading
+
+            let rightColumn = NSStackView(views: [labelsStack, seekBar, timesStack, buttonRow])
+            rightColumn.orientation = .vertical
+            rightColumn.alignment = .leading
+            rightColumn.spacing = 8
+
+            let root = NSStackView(views: [artworkView, rightColumn])
+            root.orientation = .horizontal
+            root.alignment = .top
+            root.distribution = .fill
+            root.spacing = 12
+            root.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(root)
+            rootView = root
+
+            styleConstraints = [
+                root.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
+                root.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+                root.topAnchor.constraint(equalTo: topAnchor, constant: 12),
+                root.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12),
+                artworkView.topAnchor.constraint(equalTo: root.topAnchor),
+                artworkView.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+                labelsStack.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
+                labelsStack.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
+                seekBar.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
+                seekBar.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
+                timesStack.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
+                timesStack.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
+                buttonRow.leadingAnchor.constraint(equalTo: rightColumn.leadingAnchor),
+                buttonRow.trailingAnchor.constraint(equalTo: rightColumn.trailingAnchor),
+            ]
+
+        case .largeArt:
+            [trackLabel, artistLabel, albumLabel].forEach { $0.alignment = .center }
+            labelsStack.alignment = .centerX
+            largeArtConstraint.isActive = true
+
+            let col = NSStackView(views: [artworkView, labelsStack, seekBar, timesStack, buttonRow])
+            col.orientation = .vertical
+            col.alignment = .centerX
+            col.spacing = 8
+            col.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(col)
+            rootView = col
+
+            styleConstraints = [
+                col.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
+                col.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+                col.topAnchor.constraint(equalTo: topAnchor, constant: 12),
+                labelsStack.leadingAnchor.constraint(equalTo: col.leadingAnchor),
+                labelsStack.trailingAnchor.constraint(equalTo: col.trailingAnchor),
+                seekBar.leadingAnchor.constraint(equalTo: col.leadingAnchor),
+                seekBar.trailingAnchor.constraint(equalTo: col.trailingAnchor),
+                timesStack.leadingAnchor.constraint(equalTo: col.leadingAnchor),
+                timesStack.trailingAnchor.constraint(equalTo: col.trailingAnchor),
+                buttonRow.leadingAnchor.constraint(equalTo: col.leadingAnchor),
+                buttonRow.trailingAnchor.constraint(equalTo: col.trailingAnchor),
+            ]
+        }
+
+        NSLayoutConstraint.activate(styleConstraints)
+        applyLayerBackground()
     }
 
     private func configureButton(_ button: NSButton, symbol: String, action: Selector) {

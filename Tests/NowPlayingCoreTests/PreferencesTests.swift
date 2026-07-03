@@ -52,4 +52,14 @@ final class PreferencesTests: XCTestCase {
         prefs.trackTemplate = "<title> (<year>)"
         XCTAssertEqual(prefs.trackTemplate, "<title> (<year>)")
     }
+
+    func testNowPlayingStyleDefaultsToSimple() {
+        XCTAssertEqual(Preferences(store: makeStore()).nowPlayingStyle, .simple)
+    }
+
+    func testNowPlayingStyleRoundTrips() {
+        var prefs = Preferences(store: makeStore())
+        prefs.nowPlayingStyle = .largeArt
+        XCTAssertEqual(prefs.nowPlayingStyle, .largeArt)
+    }
 }

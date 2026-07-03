@@ -23,6 +23,7 @@ public struct Preferences {
         static let progressBarBackgroundColorHex = "progressBarBackgroundColorHex"
         static let popupOpacity = "popupOpacity"
         static let popupCornerRadius = "popupCornerRadius"
+        static let nowPlayingStyle = "nowPlayingStyle"
     }
 
     public static let defaultTrackTemplate = PreferenceDefaults.trackTemplate
@@ -135,6 +136,14 @@ public struct Preferences {
             return min(PreferenceDefaults.maxPopupCornerRadius, max(0, value))
         }
         set { store.setDouble(newValue, forKey: Key.popupCornerRadius) }
+    }
+
+    public var nowPlayingStyle: NowPlayingStyle {
+        get {
+            store.string(forKey: Key.nowPlayingStyle).flatMap(NowPlayingStyle.init)
+                ?? PreferenceDefaults.nowPlayingStyle
+        }
+        set { store.setString(newValue.rawValue, forKey: Key.nowPlayingStyle) }
     }
 
     public var trackTemplate: String {

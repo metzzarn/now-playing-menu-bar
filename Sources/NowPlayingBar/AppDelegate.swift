@@ -7,6 +7,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     private let menuBuilder = MenuBarController()
     private let popupView = NowPlayingView()
     private var popupPanel: NSPanel?
+    private var popupWidthConstraint: NSLayoutConstraint?
+    private var popupHeightConstraint: NSLayoutConstraint?
     /// While Preferences is open the popup stays put; otherwise it dismisses on an outside click.
     private var isPopupPinned = false
     private var globalClickMonitor: Any?
@@ -321,8 +323,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         let background = preferences.appBackgroundColorHex.flatMap(NSColor.fromHex)
             ?? .windowBackgroundColor
         let text = preferences.appTextColorHex.flatMap(NSColor.fromHex) ?? .labelColor
+        popupView.setStyle(preferences.nowPlayingStyle)
         popupView.setColors(background: background, text: text, opacity: preferences.popupOpacity)
         popupView.setCornerRadius(preferences.popupCornerRadius)
+        // Resize the panel if the style change altered the preferred size.
+        if let panel = popupPanel { resizePopupPanel(panel) }
     }
 
     private func applyLoggedOut() {
@@ -371,10 +376,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     /// Shows the floating now-playing panel. When `pinned` (Preferences open) it stays
     /// visible; otherwise it dismisses when the user clicks outside it.
     private func showPopup(pinned: Bool) {
+        applyAppColors()  // sets the style before the panel is sized
         let panel = popupPanel ?? makePopupPanel()
         popupPanel = panel
         isPopupPinned = pinned
-        applyAppColors()
         if loggedIn, let playback {
             popupView.update(state: playback, artwork: currentArtwork)
         } else {
@@ -396,7 +401,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     }
 
     private func makePopupPanel() -> NSPanel {
-        let size = NSSize(width: 340, height: 150)
+        let size = popupView.preferredSize()
         let panel = NSPanel(contentRect: NSRect(origin: .zero, size: size),
                             styleMask: [.borderless, .nonactivatingPanel],
                             backing: .buffered, defer: false)
@@ -410,9 +415,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         popupView.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(popupView)
         // Fixed size so the view can't collapse to its (initially empty) content height.
+        let width = popupView.widthAnchor.constraint(equalToConstant: size.width)
+        let height = popupView.heightAnchor.constraint(equalToConstant: size.height)
+        popupWidthConstraint = width
+        popupHeightConstraint = height
         NSLayoutConstraint.activate([
-            popupView.widthAnchor.constraint(equalToConstant: size.width),
-            popupView.heightAnchor.constraint(equalToConstant: size.height),
+            width, height,
             popupView.leadingAnchor.constraint(equalTo: content.leadingAnchor),
             popupView.topAnchor.constraint(equalTo: content.topAnchor),
             popupView.trailingAnchor.constraint(equalTo: content.trailingAnchor),
@@ -420,6 +428,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         ])
         panel.contentView = content
         return panel
+    }
+
+    /// Resizes the panel to the view's preferred size for the current style, keeping it
+    /// anchored below the menu-bar item.
+    private func resizePopupPanel(_ panel: NSPanel) {
+        let size = popupView.preferredSize()
+        popupWidthConstraint?.constant = size.width
+        popupHeightConstraint?.constant = size.height
+        panel.setContentSize(size)
+        positionPopup(panel)
     }
 
     private func positionPopup(_ panel: NSPanel) {
