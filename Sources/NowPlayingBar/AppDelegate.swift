@@ -386,9 +386,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
-        previewView.frame = NSRect(origin: .zero, size: size)
-        panel.contentView = previewView
-        panel.setContentSize(size)
+
+        let content = NSView(frame: NSRect(origin: .zero, size: size))
+        previewView.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(previewView)
+        // Fixed size so the view can't collapse to its (initially empty) content height.
+        NSLayoutConstraint.activate([
+            previewView.widthAnchor.constraint(equalToConstant: size.width),
+            previewView.heightAnchor.constraint(equalToConstant: size.height),
+            previewView.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            previewView.topAnchor.constraint(equalTo: content.topAnchor),
+            previewView.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            previewView.bottomAnchor.constraint(equalTo: content.bottomAnchor),
+        ])
+        panel.contentView = content
         return panel
     }
 
