@@ -204,7 +204,7 @@ final class NowPlayingView: NSView {
         let buttons = NSStackView(views: [previousButton, playPauseButton, nextButton])
         buttons.orientation = .horizontal
         buttons.alignment = .centerY
-        buttons.spacing = 28
+        buttons.spacing = 12
         buttons.translatesAutoresizingMaskIntoConstraints = false
 
         // Full-width row so the buttons can center without fighting the column's alignment.
@@ -295,14 +295,22 @@ final class NowPlayingView: NSView {
     }
 
     private func configureButton(_ button: NSButton, symbol: String, action: Selector) {
-        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
+        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+            .withSymbolConfiguration(config)
         button.isBordered = false
         button.bezelStyle = .regularSquare
         button.setButtonType(.momentaryChange)
         button.imagePosition = .imageOnly
+        button.imageScaling = .scaleNone
         button.target = self
         button.action = action
         button.translatesAutoresizingMaskIntoConstraints = false
+        // A larger fixed frame than the glyph gives a comfortable click target.
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 36),
+            button.heightAnchor.constraint(equalToConstant: 32),
+        ])
     }
 
     private static func makeLabel(bold: Bool) -> NSTextField {
