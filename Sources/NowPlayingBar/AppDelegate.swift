@@ -5,14 +5,14 @@ import NowPlayingCore
 final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate {
     private var statusItem: NSStatusItem!
     private let menuBuilder = MenuBarController()
-    private let nowPlayingView = NowPlayingView()
-    private let previewView = NowPlayingView()
-    private var previewPanel: NSPanel?
+    private let popupView = NowPlayingView()
+    private var popupPanel: NSPanel?
+    /// While Preferences is open the popup stays put; otherwise it dismisses on an outside click.
+    private var isPopupPinned = false
+    private var globalClickMonitor: Any?
+    private var localClickMonitor: Any?
     private let statusView = StatusItemView()
     private let artworkLoader = ArtworkLoader()
-
-    /// The now-playing view in the menu, plus the preview shown while Preferences is open.
-    private var nowPlayingViews: [NowPlayingView] { [nowPlayingView, previewView] }
 
     private var preferences = Preferences()
     private var config: SpotifyConfig?
@@ -34,8 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     override init() {
         super.init()
         rebuildClient()
-        nowPlayingView.delegate = self
-        previewView.delegate = self
+        popupView.delegate = self
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -127,17 +126,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     @objc private func statusItemClicked() {
         guard let button = statusItem.button else { return }
         let isRight = NSApp.currentEvent?.type == .rightMouseUp
-        let showRich = !isRight && loggedIn && playback != nil
 
-        let menu: NSMenu
-        if showRich {
-            menu = menuBuilder.richMenu(contentView: nowPlayingView)
-        } else {
-            menu = menuBuilder.simpleMenu(
-                isLoggedIn: loggedIn, hasClientID: config != nil, target: self,
-                loginAction: #selector(toggleAuth),
-                prefsAction: #selector(openPreferences), quitAction: #selector(quit))
+        if isRight || !loggedIn {
+            // Right-click, or logged out: the simple Login/Preferences/Quit menu.
+            showSimpleMenu(button)
+            return
         }
+        // Left-click while logged in: toggle the floating now-playing popup.
+        // (When Preferences is open the popup is pinned and always visible.)
+        if isPopupPinned { return }
+        if let panel = popupPanel, panel.isVisible {
+            hidePopup()
+        } else {
+            showPopup(pinned: false)
+        }
+    }
+
+    private func showSimpleMenu(_ button: NSStatusBarButton) {
+        let menu = menuBuilder.simpleMenu(
+            isLoggedIn: loggedIn, hasClientID: config != nil, target: self,
+            loginAction: #selector(toggleAuth),
+            prefsAction: #selector(openPreferences), quitAction: #selector(quit))
         menu.popUp(positioning: nil,
                    at: NSPoint(x: 0, y: button.bounds.height + 5), in: button)
     }
@@ -169,7 +178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
     private func interpolate() {
         guard let playback, playback.isPlaying else { return }
         localProgressMs = min(localProgressMs + 1000, playback.durationMs)
-        nowPlayingViews.forEach { $0.updateProgress(ms: localProgressMs) }
+        popupView.updateProgress(ms: localProgressMs)
         refreshMenuBar()
     }
 
@@ -202,7 +211,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         } else {
             playback = nil
             currentArtwork = nil
-            nowPlayingViews.forEach { $0.showPlaceholder() }
+            popupView.showPlaceholder()
             refreshMenuBar()
         }
     }
@@ -213,7 +222,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         localProgressMs = state.progressMs
         if trackChanged { currentArtwork = nil }
         refreshMenuBar()
-        nowPlayingViews.forEach { $0.update(state: state, artwork: currentArtwork) }
+        popupView.update(state: state, artwork: currentArtwork)
 
         if trackChanged, let url = state.artworkURL {
             artworkRequestID += 1
@@ -223,7 +232,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 guard requestID == artworkRequestID else { return }
                 currentArtwork = image
                 if let playback {
-                    nowPlayingViews.forEach { $0.update(state: playback, artwork: image) }
+                    popupView.update(state: playback, artwork: image)
                 }
             }
         }
@@ -312,9 +321,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         let background = preferences.appBackgroundColorHex.flatMap(NSColor.fromHex)
             ?? .windowBackgroundColor
         let text = preferences.appTextColorHex.flatMap(NSColor.fromHex) ?? .labelColor
-        nowPlayingViews.forEach {
-            $0.setColors(background: background, text: text, opacity: preferences.popupOpacity)
-        }
+        popupView.setColors(background: background, text: text, opacity: preferences.popupOpacity)
     }
 
     private func applyLoggedOut() {
@@ -332,7 +339,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         if let controller = prefsController, controller.window?.isVisible == true {
             NSApp.activate(ignoringOtherApps: true)
             controller.window?.makeKeyAndOrderFront(nil)
-            showPreview()  // keep the preview visible and repositioned
+            showPopup(pinned: true)  // keep the popup visible and repositioned
             return
         }
         // Otherwise create fresh so it reflects the current, latest preferences.
@@ -352,32 +359,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 self.refreshMenuBar()
             }
         }
-        controller.onClose = { [weak self] in self?.hidePreview() }
+        controller.onClose = { [weak self] in self?.hidePopup() }
         prefsController = controller
         controller.show()
-        showPreview()
+        showPopup(pinned: true)
     }
 
-    // MARK: - Now-playing preview (shown while Preferences is open)
+    // MARK: - Now-playing popup (floating panel, used for both menu-bar clicks and Preferences)
 
-    private func showPreview() {
-        let panel = previewPanel ?? makePreviewPanel()
-        previewPanel = panel
+    /// Shows the floating now-playing panel. When `pinned` (Preferences open) it stays
+    /// visible; otherwise it dismisses when the user clicks outside it.
+    private func showPopup(pinned: Bool) {
+        let panel = popupPanel ?? makePopupPanel()
+        popupPanel = panel
+        isPopupPinned = pinned
         applyAppColors()
         if loggedIn, let playback {
-            previewView.update(state: playback, artwork: currentArtwork)
+            popupView.update(state: playback, artwork: currentArtwork)
         } else {
-            previewView.showPlaceholder()
+            popupView.showPlaceholder()
         }
-        positionPreview(panel)
+        positionPopup(panel)
         panel.orderFront(nil)
+        if pinned {
+            removeDismissMonitors()
+        } else {
+            installDismissMonitors()
+        }
     }
 
-    private func hidePreview() {
-        previewPanel?.orderOut(nil)
+    private func hidePopup() {
+        popupPanel?.orderOut(nil)
+        isPopupPinned = false
+        removeDismissMonitors()
     }
 
-    private func makePreviewPanel() -> NSPanel {
+    private func makePopupPanel() -> NSPanel {
         let size = NSSize(width: 340, height: 150)
         let panel = NSPanel(contentRect: NSRect(origin: .zero, size: size),
                             styleMask: [.borderless, .nonactivatingPanel],
@@ -386,29 +403,63 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
+        panel.becomesKeyOnlyIfNeeded = true
 
         let content = NSView(frame: NSRect(origin: .zero, size: size))
-        previewView.translatesAutoresizingMaskIntoConstraints = false
-        content.addSubview(previewView)
+        popupView.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(popupView)
         // Fixed size so the view can't collapse to its (initially empty) content height.
         NSLayoutConstraint.activate([
-            previewView.widthAnchor.constraint(equalToConstant: size.width),
-            previewView.heightAnchor.constraint(equalToConstant: size.height),
-            previewView.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            previewView.topAnchor.constraint(equalTo: content.topAnchor),
-            previewView.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            previewView.bottomAnchor.constraint(equalTo: content.bottomAnchor),
+            popupView.widthAnchor.constraint(equalToConstant: size.width),
+            popupView.heightAnchor.constraint(equalToConstant: size.height),
+            popupView.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+            popupView.topAnchor.constraint(equalTo: content.topAnchor),
+            popupView.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            popupView.bottomAnchor.constraint(equalTo: content.bottomAnchor),
         ])
         panel.contentView = content
         return panel
     }
 
-    private func positionPreview(_ panel: NSPanel) {
+    private func positionPopup(_ panel: NSPanel) {
         guard let button = statusItem.button, let buttonWindow = button.window else { return }
         let inWindow = button.convert(button.bounds, to: nil)
         let onScreen = buttonWindow.convertToScreen(inWindow)
         panel.setFrameOrigin(NSPoint(x: onScreen.minX,
                                      y: onScreen.minY - panel.frame.height - 4))
+    }
+
+    // MARK: - Outside-click dismissal (only while the popup is unpinned)
+
+    private func installDismissMonitors() {
+        removeDismissMonitors()
+        globalClickMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            MainActor.assumeIsolated { self?.hidePopup() }
+        }
+        localClickMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            MainActor.assumeIsolated { self?.handleLocalClick() }
+            return event
+        }
+    }
+
+    private func removeDismissMonitors() {
+        if let m = globalClickMonitor { NSEvent.removeMonitor(m); globalClickMonitor = nil }
+        if let m = localClickMonitor { NSEvent.removeMonitor(m); localClickMonitor = nil }
+    }
+
+    /// A click inside our own app: dismiss unless it landed on the popup itself or on the
+    /// status-bar button (the button's own handler toggles the popup closed).
+    private func handleLocalClick() {
+        guard !isPopupPinned, let panel = popupPanel, panel.isVisible else { return }
+        let point = NSEvent.mouseLocation
+        if panel.frame.contains(point) { return }
+        if let button = statusItem.button, let win = button.window {
+            let buttonFrame = win.convertToScreen(button.convert(button.bounds, to: nil))
+            if buttonFrame.contains(point) { return }
+        }
+        hidePopup()
     }
 
     // MARK: - Transport (NowPlayingViewDelegate)
@@ -417,7 +468,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         guard let client, let current = playback else { return }
         let optimistic = withPlaying(current, !current.isPlaying)
         playback = optimistic
-        nowPlayingViews.forEach { $0.update(state: optimistic, artwork: currentArtwork) }
+        popupView.update(state: optimistic, artwork: currentArtwork)
         Task {
             do {
                 if optimistic.isPlaying { try await client.play() } else { try await client.pause() }
@@ -425,7 +476,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
                 // Only revert if no newer state (e.g. a poll tick) landed meanwhile.
                 if playback == optimistic {
                     playback = current
-                    nowPlayingViews.forEach { $0.update(state: current, artwork: currentArtwork) }
+                    popupView.update(state: current, artwork: currentArtwork)
                 }
             }
         }
@@ -442,7 +493,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NowPlayingViewDelegate
         // stale progress for ~1s after a seek and would snap the bar back).
         localProgressMs = ms
         self.playback = withPlaying(playback, playback.isPlaying)
-        nowPlayingViews.forEach { $0.updateProgress(ms: ms) }
+        popupView.updateProgress(ms: ms)
         Task {
             try? await client.seek(toMs: ms)
         }

@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.15.0] - 2026-07-03
+
+### Changed
+- The now-playing popup is now the same floating panel everywhere: clicking the
+  menu-bar item opens it (instead of a macOS menu), matching the preview shown
+  while Preferences is open. Popup opacity now applies in both cases.
+- The popup dismisses when you click outside it, and stays pinned while
+  Preferences is open.
+
 ## [0.14.0] - 2026-07-02
 
 ### Added

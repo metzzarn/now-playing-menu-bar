@@ -27,16 +27,6 @@ final class MenuBarController {
         return menu
     }
 
-    /// Left-click / logged-in menu: only the rich now-playing view.
-    /// Preferences and Quit are reachable via the right-click menu.
-    func richMenu(contentView: NSView) -> NSMenu {
-        let menu = NSMenu()
-        let item = NSMenuItem()
-        item.view = contentView
-        menu.addItem(item)
-        return menu
-    }
-
     private func addTrailingItems(to menu: NSMenu,
                                   target: AnyObject,
                                   prefsAction: Selector,
